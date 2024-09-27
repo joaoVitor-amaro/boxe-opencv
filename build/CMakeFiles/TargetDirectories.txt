@@ -1,0 +1,3 @@
+C:/Users/pvc25/Downloads/ProjetoOpen/build/CMakeFiles/ProjetoOpen.dir
+C:/Users/pvc25/Downloads/ProjetoOpen/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/pvc25/Downloads/ProjetoOpen/build/CMakeFiles/ZERO_CHECK.dir

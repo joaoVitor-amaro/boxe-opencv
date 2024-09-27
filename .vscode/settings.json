@@ -1,0 +1,13 @@
+{
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "C:/Users/pvc25/Downloads/opencv/build/include"
+    ],
+    "C_Cpp.default.defines": [],
+    "C_Cpp.default.cppStandard": "c++11",
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.compilerPath": "C:/MinGW/bin/g++.exe",
+    "files.associations": {
+        "stop_token": "cpp"
+    }
+}
