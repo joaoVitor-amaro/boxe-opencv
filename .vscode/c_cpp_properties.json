@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Users/pvc25/Downloads/opencv/build/include" // Ajuste conforme o seu caminho
+            ],
+            "defines": [],
+            "compilerPath": "C:/MinGW/mingw64/bin/g++.exe", // Ajuste conforme o seu compilador
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
