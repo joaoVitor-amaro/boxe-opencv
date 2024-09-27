@@ -1,10 +1,11 @@
-#include <windows.h>
+//#include <windows.h>
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/videoio.hpp"
 #include <iostream>
 #include <vector>
+#include <random>
 
 using namespace std;
 using namespace cv;
@@ -18,10 +19,12 @@ int luvaTempoMaximo;  // Tempo máximo que a luva fica na tela
 string wName = "Game";
 
 // Caminho para o classificador Haar
-string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
+string cascade_path = "haarcascade_frontalface_default.xml";
+//Windows
+//string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
 
-// Caminho para o arquivo de som
-string sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/punch_sound2.mp3"; // Altere para o caminho do seu arquivo de som
+// Caminho para o arquivo de som - Windows
+//string sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/punch_sound2.mp3"; // Altere para o caminho do seu arquivo de som
 
 // Função para inicializar a luva (gerar nova luva)
 void inicializarLuva(Size frameSize) {
@@ -95,6 +98,37 @@ void detectarVermelhoClaro(Mat& frame) {
     }
 }
 
+void drawHealthBar(cv::Mat& frame, int health, int max_health) {
+    int xjoga = 0;
+    int yjoga = 20;
+
+    // Escolha a fonte, escala, cor, espessura e estilo
+    int font = cv::FONT_HERSHEY_SIMPLEX; // Tipo de fonte
+    double fontScale = 1.0;               // Escala do texto
+    cv::Scalar color(0, 255, 0);          // Cor (BGR - Verde)
+    int thickness = 2;                    // Espessura da linha do texto
+    int lineType = cv::LINE_AA;    
+
+    // Posição e dimensões da barra de vida
+    int bar_width = 100;  // Largura da barra de vida (eixo X)
+    int bar_height = 20;  // Altura da barra de vida
+    int x = 10;           // Posição X no frame
+    int y = 30;           // Posição Y no frame
+
+    // Calcular a proporção da vida (percentual de vida restante)
+    float health_ratio = (float)health / max_health;
+
+    // Desenhar o contorno da barra de vida (fundo)
+    cv::rectangle(frame, cv::Point(x, y), cv::Point(x + bar_width, y + bar_height), cv::Scalar(0, 0, 0), 2);
+
+    // Desenhar a parte preenchida da barra de vida
+    int current_bar_width = static_cast<int>(bar_width * health_ratio);  // Tamanho proporcional à vida
+    cv::putText(frame, "Jogador", cv::Point(xjoga, yjoga), font, fontScale, color, thickness, lineType);
+    cv::rectangle(frame, cv::Point(x, y), cv::Point(x + current_bar_width, y + bar_height), cv::Scalar(255, 0, 0), cv::FILLED); // Azul
+
+}
+
+
 int main(int argc, const char** argv) {
     VideoCapture capture;
     Mat frame;
@@ -102,6 +136,8 @@ int main(int argc, const char** argv) {
     double scale = 1;
     char key = 0;
     setNumThreads(1);
+    int vida = 100;
+    int max_vida = 100;
 
     // Carregar o classificador Haar
     if (!cascade.load(cascade_path)) {
@@ -146,13 +182,15 @@ int main(int argc, const char** argv) {
             if (luvaTempoVida < luvaTempoMaximo) {
                 desenharLuva(frame);
             }
-
+            drawHealthBar(frame, vida, max_vida);
             // Verificar se a luva atingiu a face
             faceHit = !faces.empty() && acertouRosto(faces[0]);
             if (faceHit) {
                 cout << "Face atingida!" << endl;
+                //Toca musica no linux
+                system("mplayer punch_sound2.mp3 &");
                 // Tocar o som usando ShellExecute
-                ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
                 
                 // Reiniciar a luva
                 luvaTempoVida = luvaTempoMaximo; // Definir para desaparecer imediatamente
