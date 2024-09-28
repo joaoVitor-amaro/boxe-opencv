@@ -5,6 +5,7 @@
 #include "opencv2/videoio.hpp"
 #include <iostream>
 #include <vector>
+#include <random>
 
 using namespace std;
 using namespace cv;
@@ -14,14 +15,23 @@ Point luvaPosicao;    // Posição da luva
 int luvaTempoVida;    // Contador de vida da luva
 int luvaTempoMaximo;  // Tempo máximo que a luva fica na tela
 
+// Variáveis para a pílula verde
+Point pillPosition;    // Posição da pílula
+bool showPill = false; // Flag para mostrar a pílula
+const int PILL_SIZE = 15; // Tamanho da pílula
+
 // Nome da janela
 string wName = "Game";
-
+//Windows
 // Caminho para o classificador Haar
 string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
 
 // Caminho para o arquivo de som
 string sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/punch_sound2.mp3"; // Altere para o caminho do seu arquivo de som
+
+string life_sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/somvida.mp3";
+
+string background_image = "C:/Users/pvc25/Downloads/ProjetoOpen/IMG_9643.jpg";
 
 // Função para inicializar a luva (gerar nova luva)
 void inicializarLuva(Size frameSize) {
@@ -30,14 +40,37 @@ void inicializarLuva(Size frameSize) {
     int yPos = rand() % (frameSize.height - 2 * margin) + margin; // Posição aleatória no eixo y
     luvaPosicao = Point(xPos, yPos);        // Inicializa a posição em um local aleatório na tela
     luvaTempoVida = 0;                      // Inicializa o contador de vida
-    luvaTempoMaximo = 4;                  // Define o tempo máximo que a luva fica na tela (100 frames)
+    luvaTempoMaximo = 10;                  // Define o tempo máximo que a luva fica na tela (100 frames)
 }
 
-// Função para desenhar a luva no frame
-void desenharLuva(Mat& frame) {
-    int raioLuva = 20; // Raio da luva
-    circle(frame, luvaPosicao, raioLuva, Scalar(0, 0, 255), -1);  // Desenha o círculo representando a luva
+void desenharPilula(Mat& frame) {
+    if (showPill) {
+        int raioPilula = 15; // Defina o tamanho do círculo da pílula
+        circle(frame, pillPosition, raioPilula, Scalar(0, 255, 0), -1); // Desenha um círculo verde
+    }
 }
+
+// Verifica se a pílula colidiu com o rosto
+bool coletouPilula(Rect face) {
+    Rect pillRect(pillPosition.x - PILL_SIZE / 2, pillPosition.y - PILL_SIZE / 4, PILL_SIZE, PILL_SIZE / 2);
+    return (face & pillRect).area() > 0; // Verifica se há interseção
+}
+
+
+// Função para desenhar um alvo na posição da luva
+void desenharAlvo(Mat& frame) {
+    int centerX = luvaPosicao.x;
+    int centerY = luvaPosicao.y;
+    int radius = 20; // Raio do alvo
+
+    // Desenhar os círculos do alvo
+    circle(frame, Point(centerX, centerY), radius + 20, Scalar(0, 0, 255), -1); // Vermelho externo
+    circle(frame, Point(centerX, centerY), radius + 10, Scalar(255, 255, 255), -1); // Branco (ajustado)
+    circle(frame, Point(centerX, centerY), radius + 5, Scalar(0, 0, 255), -1); // Vermelho
+    circle(frame, Point(centerX, centerY), radius, Scalar(255, 255, 255), -1); // Branco
+    circle(frame, Point(centerX, centerY), 5, Scalar(0, 0, 255), -1); // Pequeno círculo vermelho no centro
+}
+
 
 // Verifica se a luva atingiu o rosto
 bool acertouRosto(Rect face) {
@@ -95,6 +128,79 @@ void detectarVermelhoClaro(Mat& frame) {
     }
 }
 
+void drawHealthBar(cv::Mat& frame, int health, int max_health) {
+    int xjoga = 0;
+    int yjoga = 20;
+
+    // Escolha a fonte, escala, cor, espessura e estilo
+    int font = cv::FONT_HERSHEY_SIMPLEX; // Tipo de fonte
+    double fontScale = 1.0;               // Escala do texto
+    cv::Scalar color(255, 0, 0);          // Cor (BGR - Azul)
+    int thickness = 2;                    // Espessura da linha do texto
+    int lineType = cv::LINE_AA;    
+
+    // Posição e dimensões da barra de vida
+    int bar_width = 100;  // Largura da barra de vida (eixo X)
+    int bar_height = 20;  // Altura da barra de vida
+    int x = 10;           // Posição X no frame
+    int y = 30;           // Posição Y no frame
+
+    // Calcular a proporção da vida (percentual de vida restante)
+    float health_ratio = (float)health / max_health;
+
+    // Desenhar o contorno da barra de vida (fundo)
+    cv::rectangle(frame, cv::Point(x, y), cv::Point(x + bar_width, y + bar_height), cv::Scalar(0, 0, 0), 2);
+
+    // Desenhar a parte preenchida da barra de vida
+    int current_bar_width = static_cast<int>(bar_width * health_ratio);  // Tamanho proporcional à vida
+    cv::putText(frame, "Jogador", cv::Point(xjoga, yjoga), font, fontScale, color, thickness, lineType);
+    cv::rectangle(frame, cv::Point(x, y), cv::Point(x + current_bar_width, y + bar_height), cv::Scalar(255, 0, 0), cv::FILLED); // Azul
+
+}
+
+void TextMenuPrincipal(Mat& frame) {
+    int xGame = 200;
+    int yGame = 400;
+    int xSair = 200;
+    int ySair = 450;
+
+    // Escolha a fonte, escala, cor, espessura e estilo
+    int font = FONT_HERSHEY_SIMPLEX; // Tipo de fonte
+    double fontScale = 1.0;           // Escala do texto
+    Scalar textColor(0, 0, 0);        // Cor do texto (preto)
+    Scalar boxColor1(0, 255, 0);      // Cor da caixa para "NEW GAME" (verde)
+    Scalar boxColor2(0, 0, 255);      // Cor da caixa para "BACK" (vermelho)
+    int thickness = 2;                 // Espessura da linha do texto
+    int lineType = LINE_AA; 
+
+    // Definir tamanhos para os textos
+    Size textSizeGame = getTextSize("NEW GAME", font, fontScale, thickness, nullptr);
+    Size textSizeSair = getTextSize("BACK", font, fontScale, thickness, nullptr);
+    
+    // Aumentar a margem das caixas
+    int padding = 12; // Margem adicional ao redor do texto
+
+    // Definir uma largura fixa para as caixas
+    int fixedWidth = 200; // Você pode ajustar esse valor conforme necessário
+
+    // Calcular posições das caixas
+    Rect boxGame(Point(xGame - padding, yGame - textSizeGame.height - padding), 
+                 Size(fixedWidth, textSizeGame.height + padding * 2));
+    Rect boxSair(Point(xSair - padding, ySair - textSizeSair.height - padding), 
+                 Size(fixedWidth, textSizeSair.height + padding * 2));
+    
+    // Desenhar as caixas
+    rectangle(frame, boxGame, boxColor1, FILLED); // Caixa para "NEW GAME"
+    rectangle(frame, boxSair, boxColor2, FILLED); // Caixa para "BACK"
+    
+    // Desenhar os textos
+    putText(frame, "NEW GAME", Point(xGame + (fixedWidth - textSizeGame.width) / 2, yGame), 
+            font, fontScale, textColor, thickness, lineType);
+    putText(frame, "BACK", Point(xSair + (fixedWidth - textSizeSair.width) / 2, ySair), 
+            font, fontScale, textColor, thickness, lineType);
+}
+
+
 int main(int argc, const char** argv) {
     VideoCapture capture;
     Mat frame;
@@ -102,11 +208,42 @@ int main(int argc, const char** argv) {
     double scale = 1;
     char key = 0;
     setNumThreads(1);
+    int vida = 100;
+    int max_vida = 100;
 
     // Carregar o classificador Haar
     if (!cascade.load(cascade_path)) {
         cout << "ERROR: Could not load classifier cascade: " << cascade_path << endl;
         return -1;
+    }
+    
+    // Criar uma janela para exibição
+    namedWindow(wName, WINDOW_AUTOSIZE);
+    
+    // Criar um ima imagem de fundo
+    Mat backgroundImage = imread(background_image);
+    // Verificar se a imagem foi carregada corretamente
+    if (backgroundImage.empty()) {
+        cout << "Erro ao carregar a imagem de fundo!" << endl;
+        return -1;
+    }
+
+    // Redimensionar a imagem de fundo para o tamanho da janela, se necessário
+    resize(backgroundImage, backgroundImage, Size(640, 480));
+    TextMenuPrincipal(backgroundImage);
+    // Exibir o frame preto inicialmente
+    imshow(wName, backgroundImage);
+    cout << "Pressione 'ENTER' para iniciar a câmera." << endl;
+
+    // Aguardar até que a tecla 'ENTER' seja pressionada
+    while (true) {
+        key = (char)waitKey(10);
+        if(key == 27) {
+            return 0;
+        } 
+        if (key == 13) {
+            break; // Sai do loop quando 'ENTER' é pressionado
+        }
     }
 
     // Abrir webcam
@@ -114,6 +251,7 @@ int main(int argc, const char** argv) {
         cout << "Capture from camera #0 didn't work" << endl;
         return 1;
     }
+
 
     if (capture.isOpened()) {
         cout << "Video capturing has been started ..." << endl;
@@ -127,6 +265,10 @@ int main(int argc, const char** argv) {
 
         // Inicializar a primeira luva
         inicializarLuva(Size(640, 480));
+
+        // Inicializar a pílula verde
+        srand(static_cast<unsigned int>(time(0))); // Inicializa o gerador de números aleatórios
+        pillPosition = Point(0, 0);
 
         while (1) {
             capture >> frame;
@@ -144,18 +286,46 @@ int main(int argc, const char** argv) {
 
             // Verificar se a luva deve ser desenhada
             if (luvaTempoVida < luvaTempoMaximo) {
-                desenharLuva(frame);
+                desenharAlvo(frame);
             }
-
+            drawHealthBar(frame, vida, max_vida);
             // Verificar se a luva atingiu a face
             faceHit = !faces.empty() && acertouRosto(faces[0]);
             if (faceHit) {
                 cout << "Face atingida!" << endl;
-                // Tocar o som usando ShellExecute
+                vida -= 10; 
+                if (vida < 0) vida = 0; // Garantir que a vida não fique negativa
+                
+                // Verificar se a vida está abaixo de 25 para mostrar a pílula
+                if (vida < 25 && !showPill) {
+                    // Gerar a posição da pílula aleatoriamente
+                    pillPosition = Point(rand() % frame.cols, rand() % frame.rows);
+                    showPill = true; // Exibe a pílula
+                }
+                //Toca musica no linux
+                //system("mplayer punch_sound2.mp3 &");
+                // Tocar o som usando ShellExecute -- Windows
                 ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
                 
                 // Reiniciar a luva
                 luvaTempoVida = luvaTempoMaximo; // Definir para desaparecer imediatamente
+            }
+
+            desenharPilula(frame);
+
+            // Verificar colisão da pílula com o rosto
+            for (Rect& face : faces) {
+                if (coletouPilula(face)) {
+                    vida += 10; // Aumentar vida em 15
+                    //Toca o som no windows
+                    ShellExecute(NULL, "open", life_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    //Toca o som no linux
+                    //system("mplayer somvida.mp3 &");
+                    if (vida > max_vida) vida = max_vida; // Não exceder o máximo
+                        showPill = false; // Ocultar a pílula após coleta
+                        pillPosition = Point(-100, -100); // Move a pílula para fora da tela para "remover"
+                        break; // Sair do loop após coletar
+                }
             }
 
             // Incrementar o contador de tempo de vida da luva
@@ -173,7 +343,7 @@ int main(int argc, const char** argv) {
             imshow(wName, frame);
 
             key = (char)waitKey(10);
-            if (key == 27 || key == 'q' || key == 'Q')  // Pressionar ESC ou 'q' para sair
+            if (key == 27)  // Pressionar ESC
                 break;
             if (getWindowProperty(wName, WND_PROP_VISIBLE) == 1)
                 continue;
