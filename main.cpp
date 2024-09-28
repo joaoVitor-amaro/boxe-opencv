@@ -1,4 +1,4 @@
-#include <windows.h>
+//#include <windows.h>
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
@@ -22,17 +22,28 @@ const int PILL_SIZE = 15; // Tamanho da pílula
 
 // Nome da janela
 string wName = "Game";
+
+//Linux
+string cascade_path = "haarcascade_frontalface_default.xml";
 //Windows
 // Caminho para o classificador Haar
-string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
+//string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
 
 // Caminho para o arquivo de som
-string sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/punch_sound2.mp3"; // Altere para o caminho do seu arquivo de som
+//Linux
+string sound_path = "punch_sound2.mp3";
+//Windows
+//string sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/punch_sound2.mp3"; // Altere para o caminho do seu arquivo de som
 
-string life_sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/somvida.mp3";
+//Linux
+string life_sound_path = "somvida.mp3";
+//Windows
+//string life_sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/somvida.mp3";
 
-string background_image = "C:/Users/pvc25/Downloads/ProjetoOpen/IMG_9643.jpg";
-
+//Linux
+string background_image = "IMG_9643.jpg";
+//Windows
+//string background_image = "C:/Users/pvc25/Downloads/ProjetoOpen/IMG_9643.jpg";
 // Função para inicializar a luva (gerar nova luva)
 void inicializarLuva(Size frameSize) {
     int margin = 100; // Margem para evitar que a luva apareça muito perto das bordas
@@ -303,9 +314,9 @@ int main(int argc, const char** argv) {
                     showPill = true; // Exibe a pílula
                 }
                 //Toca musica no linux
-                //system("mplayer punch_sound2.mp3 &");
+                system("mplayer punch_sound2.mp3 &");
                 // Tocar o som usando ShellExecute -- Windows
-                ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
                 
                 // Reiniciar a luva
                 luvaTempoVida = luvaTempoMaximo; // Definir para desaparecer imediatamente
@@ -318,9 +329,9 @@ int main(int argc, const char** argv) {
                 if (coletouPilula(face)) {
                     vida += 10; // Aumentar vida em 15
                     //Toca o som no windows
-                    ShellExecute(NULL, "open", life_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    //ShellExecute(NULL, "open", life_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
                     //Toca o som no linux
-                    //system("mplayer somvida.mp3 &");
+                    system("mplayer somvida.mp3 &");
                     if (vida > max_vida) vida = max_vida; // Não exceder o máximo
                         showPill = false; // Ocultar a pílula após coleta
                         pillPosition = Point(-100, -100); // Move a pílula para fora da tela para "remover"
