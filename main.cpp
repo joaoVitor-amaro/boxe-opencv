@@ -20,8 +20,8 @@ Point inimigoPosicao; // Posição do inimigo
 int inimigoTempoVida; // Contador de vida do inimigo
 int inimigoTempoMaximo; // Tempo máximo que o inimigo fica na tela
 
-int vidaInimigo = 50; // Vida inicial do inimigo
-int maxVidaInimigo = 50; // Vida máxima do inimigo
+int vidaInimigo = -100; // Vida inicial do inimigo
+int maxVidaInimigo = -100; // Vida máxima do inimigo
 
 // Variáveis para a pílula verde
 Point pillPosition; // Posição da pílula
@@ -190,7 +190,7 @@ void detectarVermelhoClaro(Mat& frame, bool& inimigoHit) {
 
 void drawHealthBarJogador(cv::Mat& frame, int health, int max_health) {
     int xjoga = 0;
-    int yjoga = 20;
+    int yjoga = 25;
 
     // Escolha a fonte, escala, cor, espessura e estilo
     int font = cv::FONT_HERSHEY_SIMPLEX; // Tipo de fonte
@@ -203,7 +203,7 @@ void drawHealthBarJogador(cv::Mat& frame, int health, int max_health) {
     int bar_width = 100; // Largura da barra de vida (eixo X)
     int bar_height = 20; // Altura da barra de vida
     int x = 10; // Posição X no frame
-    int y = 30; // Posição Y no frame
+    int y = 35; // Posição Y no frame
 
     // Calcular a proporção da vida (percentual de vida restante)
     float health_ratio = (float)health / max_health;
@@ -215,6 +215,35 @@ void drawHealthBarJogador(cv::Mat& frame, int health, int max_health) {
     int current_bar_width = static_cast<int>(bar_width * health_ratio); // Tamanho proporcional à vida
     cv::putText(frame, "Jogador", cv::Point(xjoga, yjoga), font, fontScale, color, thickness, lineType);
     cv::rectangle(frame, cv::Point(x, y), cv::Point(x + current_bar_width, y + bar_height), cv::Scalar(255, 0, 0), cv::FILLED); // Azul
+}
+
+void drawHealthBarInimigo(cv::Mat& frame, int health, int max_health) {
+    int xInimigo = 520;
+    int yInimigo = 25;
+
+    // Escolha a fonte, escala, cor, espessura e estilo
+    int font = cv::FONT_HERSHEY_SIMPLEX; // Tipo de fonte
+    double fontScale = 1.0; // Escala do texto
+    cv::Scalar color(255, 0, 0); // Cor (BGR - Azul)
+    int thickness = 2; // Espessura da linha do texto
+    int lineType = cv::LINE_AA; 
+
+    // Posição e dimensões da barra de vida
+    int bar_width = -100; // Largura da barra de vida (eixo X)
+    int bar_height = 20; // Altura da barra de vida
+    int x = 625; // Posição X no frame
+    int y = 35; // Posição Y no frame
+
+    // Calcular a proporção da vida (percentual de vida restante)
+    float health_ratio = (float)health / max_health;
+
+    // Desenhar o contorno da barra de vida (fundo)
+    cv::rectangle(frame, cv::Point(x, y), cv::Point(x + bar_width, y + bar_height), cv::Scalar(0, 0, 0), 2);
+
+    // Desenhar a parte preenchida da barra de vida
+    int current_bar_width = static_cast<int>(bar_width * health_ratio); // Tamanho proporcional à vida
+    cv::putText(frame, "Inimigo", cv::Point(xInimigo, yInimigo), font, fontScale, color, thickness, lineType);
+    cv::rectangle(frame, cv::Point(x, y), cv::Point(x + current_bar_width, y + bar_height), cv::Scalar(0, 0, 255), cv::FILLED); // Azul
 }
 
 void TextMenuPrincipal(Mat& frame) {
@@ -363,19 +392,18 @@ int main(int argc, const char** argv) {
                 desenharInimigo(frame);
             }
 
+            //Barra de vida dos jogador e Inimigo
+            drawHealthBarJogador(frame, vida, max_vida);
+            drawHealthBarInimigo(frame, vidaInimigo, maxVidaInimigo);
+
             // Verificar colisão com o inimigo
             if (!faces.empty() && acertouInimigo(faces[0])) {
                 cout << "Inimigo atingido!" << endl;
                 system("mplayer punch_sound.mp3 &");
-                vida -= 20; // Diminui vida ao acertar o inimigo
+                vidaInimigo += 20; // Diminui vida ao acertar o inimigo
                 inimigoHit = true; // Marca que o inimigo foi atingido
                 inimigoTempoVida = inimigoTempoMaximo; // Reinicia o tempo de vida do inimigo
             }
-
-            // Desenhar a barra de vida do inimigo
-            //drawEnemyHealthBar(frame, vidaInimigo, maxVidaInimigo, inimigoPosicao);
-
-            drawHealthBarJogador(frame, vida, max_vida);
 
             // Verificar se a luva atingiu a face
             faceHit = !faces.empty() && acertouRosto(faces[0]);
@@ -421,7 +449,7 @@ int main(int argc, const char** argv) {
                 inicializarInimigo(frame.size());
             }
 
-            if (vidaInimigo <= 0) {
+            if (vidaInimigo >= 0) {
                 vidaInimigo = maxVidaInimigo; // Reinicia a vida do inimigo
                 // Opcional: Reinicializar a posição ou outras características do inimigo
                 inicializarInimigo(frame.size());
