@@ -71,20 +71,6 @@ void inicializarInimigo(Size frameSize) {
     inimigoTempoMaximo = 10; // Define o tempo máximo que a luva fica na tela (100 frames)
 }
 
-/* void drawEnemyHealthBar(Mat& frame, int vidaInimigo, int maxVidaInimigo, Point enemyPos) {
-int x = enemyPos.x - 30; // Posição X para a barra
-int y = enemyPos.y - 10; // Posição Y para a barra */
-
-// Calcular a proporção da vida
-//float healthRatio = (float)vidaInimigo / maxVidaInimigo;
-
-// Desenhar o contorno da barra de vida (fundo)
-//rectangle(frame, Point(x, y), Point(x + 60, y + 10), Scalar(0, 0, 0), -1); // Fundo preto
-
-// Desenhar a parte preenchida da barra de vida (vermelha)
-//rectangle(frame, Point(x, y), Point(x + 60 * healthRatio, y + 10), Scalar(0, 0, 255), -1); // Vermelho
-//}
-
 void desenharPilula(Mat& frame) {
     if (showPill) {
         int raioPilula = 15; // Defina o tamanho do círculo da pílula
@@ -138,13 +124,34 @@ void detectarRostos(Mat& frame, CascadeClassifier& cascade, vector<Rect>& faces,
 
 }
 
-void desenharInimigo(Mat& frame) {
+/*void desenharInimigo(Mat& frame) {
     int centerX = inimigoPosicao.x;
     int centerY = inimigoPosicao.y;
     int radius = 20; // Raio do inimigo
 
     // Desenhar os círculos do inimigo
     circle(frame, Point(centerX, centerY), radius, Scalar(0, 0, 255), -1); // Vermelho
+}*/
+
+void desenharInimigo(Mat& frame) {
+    int larguraBoneco = 40;
+    int alturaBoneco = 80;
+
+    // Cabeça (circulo)
+    Point centroCabeça(inimigoPosicao.x, inimigoPosicao.y - alturaBoneco / 2 + larguraBoneco / 4);
+    int raioCabeça = larguraBoneco / 4;
+    circle(frame, centroCabeça, raioCabeça, Scalar(255, 0, 0), -1);
+
+    // Corpo
+    Rect corpo(inimigoPosicao.x - larguraBoneco / 4, inimigoPosicao.y - alturaBoneco / 2 + larguraBoneco / 2, larguraBoneco / 2, alturaBoneco / 2);
+    rectangle(frame, corpo, Scalar(255, 0, 0), -1);
+
+    // Braços
+    Rect bracoEsq(inimigoPosicao.x - larguraBoneco / 2, inimigoPosicao.y - alturaBoneco / 2 + larguraBoneco / 2, larguraBoneco / 4, alturaBoneco / 4);
+    Rect bracoDir(inimigoPosicao.x + larguraBoneco / 4, inimigoPosicao.y - alturaBoneco / 2 + larguraBoneco / 2, larguraBoneco / 4, alturaBoneco / 4);
+    rectangle(frame, bracoEsq, Scalar(255, 0, 0), -1);
+    rectangle(frame, bracoDir, Scalar(255, 0, 0), -1);
+
 }
 
 // Verifica se a luva atingiu o inimigo
