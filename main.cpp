@@ -105,11 +105,11 @@ void desenharAlvo(Mat& frame) {
     int radius = 20; // Raio do alvo
 
     // Desenhar os círculos do alvo
-    circle(frame, Point(centerX, centerY), radius + 20, Scalar(0, 0, 255), -1); // Vermelho externo
+    circle(frame, Point(centerX, centerY), radius + 20, Scalar(0, 0, 0), -1); // Vermelho externo
     circle(frame, Point(centerX, centerY), radius + 10, Scalar(255, 255, 255), -1); // Branco (ajustado)
-    circle(frame, Point(centerX, centerY), radius + 5, Scalar(0, 0, 255), -1); // Vermelho
+    circle(frame, Point(centerX, centerY), radius + 5, Scalar(0, 0, 0), -1); // Vermelho
     circle(frame, Point(centerX, centerY), radius, Scalar(255, 255, 255), -1); // Branco
-    circle(frame, Point(centerX, centerY), 5, Scalar(0, 0, 255), -1); // Pequeno círculo vermelho no centro
+    circle(frame, Point(centerX, centerY), 5, Scalar(0, 0, 0), -1); // Pequeno círculo vermelho no centro
 }
 
 // Verifica se a luva atingiu o rosto
