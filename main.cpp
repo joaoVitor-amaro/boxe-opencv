@@ -7,6 +7,7 @@
 #include <vector>
 #include <random>
 #include <unistd.h>
+#include <chrono>
 
 using namespace std;
 using namespace cv;
@@ -296,6 +297,25 @@ void TextMenuPrincipal(Mat& frame) {
             font, fontScale, textColor, thickness, lineType);
 }
 
+void Textempo(Mat& frame, int& seconds) {
+    int xTextTempo = 250;
+    int yTextTempo = 25;
+
+    int xTempo = 280; // Posição X no frame
+    int yTempo = 70; // Posição Y no frame
+
+    // Escolha a fonte, escala, cor, espessura e estilo
+    int font = cv::FONT_HERSHEY_SIMPLEX; // Tipo de fonte
+    double fontScale = 1.0; // Escala do texto
+    cv::Scalar color(255, 0, 0); // Cor (BGR - Azul)
+    int thickness = 2; // Espessura da linha do texto
+    int lineType = cv::LINE_AA;
+    string time_text = to_string(seconds); 
+
+    cv::putText(frame, "Tempo", cv::Point(xTextTempo, yTextTempo), font, fontScale, color, thickness, lineType);
+    cv::putText(frame, time_text, cv::Point(xTempo, yTempo), font, fontScale, color, thickness, lineType);
+}
+
 int main(int argc, const char** argv) {
     VideoCapture capture;
     Mat frame;
@@ -305,6 +325,10 @@ int main(int argc, const char** argv) {
     setNumThreads(1);
     int vida = 100;
     int max_vida = 100;
+    int tempo_round = 10;
+    int vitoriaJogador = 0;
+    int vitoriaInimigo = 0;
+    int qtd_rounds = 1;
 
     cout << "Vida do Inimigo: " << vidaInimigo << endl;
 
@@ -368,16 +392,29 @@ int main(int argc, const char** argv) {
 
         // Inicializar o inimigo
         inicializarInimigo(Size(640, 480));
-        sleep(3);
+        //sleep(3);
         system("mplayer boxing_bell_sound2.mp3 &");
         
         // Inicializar a pílula verde
         srand(static_cast<unsigned int>(time(0))); // Inicializa o gerador de números aleatórios
         pillPosition = Point(0, 0);
+        // Inicializa o tempo do cronômetro
+        auto start_time = chrono::steady_clock::now();
         while (1) {
             capture >> frame;
             if (frame.empty())
                 break;
+
+            if(qtd_rounds == 4) {
+                if(vitoriaJogador > vitoriaInimigo) {
+                    cout << "Jogador ganhou" << endl;
+                } else if (vitoriaJogador < vitoriaInimigo) {
+                    cout << "Inimigo ganhou" << endl;
+                } else {
+                    cout << "Empate" << endl;
+                }
+                break;
+            }  
 
             // Inverter a imagem horizontalmente
             flip(frame, frame, 1); // 1 significa inverter horizontalmente
@@ -400,7 +437,31 @@ int main(int argc, const char** argv) {
             if (inimigoTempoVida < inimigoTempoMaximo) {
                 desenharInimigo(frame);
             }
+            auto current_time = chrono::steady_clock::now();
+            auto elapsed_seconds = chrono::duration_cast<chrono::seconds>(current_time - start_time).count();
 
+            // Reduz o tempo em um segundo a cada segundo
+            if (elapsed_seconds >= 1) {
+                tempo_round -= 1;
+                if (tempo_round == 0) {
+                    if(vida > vidaInimigo*(-1)) {
+                        vitoriaJogador++;
+                    } else if (vida < vidaInimigo*(-1)){
+                        vitoriaInimigo++;
+                    }
+                    
+                    cout << "Fim de round 1" << endl;
+                    Textemp(frame, tempo_round);
+                    sleep(2);
+                    tempo_round = 10;  // Garante que o tempo não fique negativo
+                    qtd_rounds++;
+                    vida = max_vida;
+                    vidaInimigo = maxVidaInimigo;   
+                }
+                start_time = current_time;  // Reinicia o tempo de referência
+            }
+            //Texto do tempo
+            Textempo(frame, tempo_round);
             //Barra de vida dos jogador e Inimigo
             drawHealthBarJogador(frame, vida, max_vida);
             drawHealthBarInimigo(frame, vidaInimigo, maxVidaInimigo);
@@ -471,10 +532,8 @@ int main(int argc, const char** argv) {
                 // Se o tempo de vida acabou, inicializar uma nova luva
                 inicializarLuva(frame.size());
             }
-
             // Detectar cores vermelhas bem claras
             detectarVermelhoClaro(frame, inimigoHit);
-
             // Mostrar o frame final com rostos e a luva
             imshow(wName, frame);
 
@@ -485,7 +544,8 @@ int main(int argc, const char** argv) {
                 continue;
         }
     }
-
+    cout << vitoriaJogador << endl;
+    cout << vitoriaInimigo << endl;
     capture.release();
     destroyAllWindows();
     return 0;
