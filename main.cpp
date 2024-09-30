@@ -118,7 +118,7 @@ void detectarRostos(Mat& frame, CascadeClassifier& cascade, vector<Rect>& faces,
     for (size_t i = 0; i < faces.size(); i++) {
         Rect r = faces[i];
         // Se a luva atingiu a face, mude a cor do retângulo para vermelho
-        Scalar rectangleColor = faceHit ? Scalar(0, 0, 255) : Scalar(255, 0, 0);
+        Scalar rectangleColor = faceHit ? Scalar(0, 0, 0) : Scalar(255, 0, 0);
         rectangle(frame, Point(cvRound(r.x), cvRound(r.y)),
         Point(cvRound((r.x + r.width - 1)), cvRound((r.y + r.height - 1))),
         rectangleColor, 3);
@@ -167,10 +167,14 @@ void detectarVermelhoClaro(Mat& frame, bool& inimigoHit) {
     cvtColor(frame, hsvFrame, COLOR_BGR2HSV); // Converter para o espaço de cor HSV
 
     // Definir os limites para vermelho bem claro
-    Scalar lowerRed1(0, 100, 200); // Limite inferior (Hue, Saturação, Valor)
+    /*
+    Scalar lowerRed1(0, 170, 150); // Limite inferior (Hue, Saturação, Valor)
     Scalar upperRed1(10, 255, 255); // Limite superior
     Scalar lowerRed2(170, 100, 200); // Limite inferior para vermelho em outra parte do círculo
-    Scalar upperRed2(180, 255, 255); // Limite superior
+    Scalar upperRed2(180, 255, 255); // Limite superior 
+    */
+
+   
 
     // Criar máscara para cores vermelhas claras
     Mat mask1, mask2;
@@ -190,6 +194,9 @@ void detectarVermelhoClaro(Mat& frame, bool& inimigoHit) {
 
             // Verifica se o inimigo foi atingido
             if (acertouInimigo(boundingBox)) {
+                cout << "Inimigo atingido!" << endl;
+                system("mplayer punch_sound.mp3 &");
+                vidaInimigo += 20; // Diminui vida ao acertar o inimigo
                 inimigoHit = true; // Marca que o inimigo foi atingido
                 inimigoTempoVida = inimigoTempoMaximo; // Reinicia o tempo de vida do inimigo
             }
@@ -325,7 +332,7 @@ int main(int argc, const char** argv) {
     setNumThreads(1);
     int vida = 100;
     int max_vida = 100;
-    int tempo_round = 10;
+    int tempo_round = 1000;
     int vitoriaJogador = 0;
     int vitoriaInimigo = 0;
     int qtd_rounds = 1;
@@ -477,13 +484,13 @@ int main(int argc, const char** argv) {
             drawHealthBarInimigo(frame, vidaInimigo, maxVidaInimigo);
 
             // Verificar colisão com o inimigo
-            if (!faces.empty() && acertouInimigo(faces[0])) {
+            /*if (!faces.empty() && acertouInimigo(faces[0])) {
                 cout << "Inimigo atingido!" << endl;
                 system("mplayer punch_sound.mp3 &");
                 vidaInimigo += 2; // Diminui vida ao acertar o inimigo
                 inimigoHit = true; // Marca que o inimigo foi atingido
                 inimigoTempoVida = inimigoTempoMaximo; // Reinicia o tempo de vida do inimigo
-            }
+            }*/
 
             // Verificar se a luva atingiu a face
             faceHit = !faces.empty() && acertouRosto(faces[0]);
