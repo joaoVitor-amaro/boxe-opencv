@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <random>
+#include <unistd.h>
 
 using namespace std;
 using namespace cv;
@@ -138,9 +139,9 @@ void desenharInimigo(Mat& frame) {
     int alturaBoneco = 80;
 
     // Cabeça (circulo)
-    Point centroCabeça(inimigoPosicao.x, inimigoPosicao.y - alturaBoneco / 2 + larguraBoneco / 4);
-    int raioCabeça = larguraBoneco / 4;
-    circle(frame, centroCabeça, raioCabeça, Scalar(255, 0, 0), -1);
+    Point centroCabeca(inimigoPosicao.x, inimigoPosicao.y - alturaBoneco / 2 + larguraBoneco / 4);
+    int raioCabeca = larguraBoneco / 4;
+    circle(frame, centroCabeca, raioCabeca, Scalar(255, 0, 0), -1);
 
     // Corpo
     Rect corpo(inimigoPosicao.x - larguraBoneco / 4, inimigoPosicao.y - alturaBoneco / 2 + larguraBoneco / 2, larguraBoneco / 2, alturaBoneco / 2);
@@ -367,11 +368,12 @@ int main(int argc, const char** argv) {
 
         // Inicializar o inimigo
         inicializarInimigo(Size(640, 480));
-
+        sleep(3);
+        system("mplayer boxing_bell_sound2.mp3 &");
+        
         // Inicializar a pílula verde
         srand(static_cast<unsigned int>(time(0))); // Inicializa o gerador de números aleatórios
         pillPosition = Point(0, 0);
-
         while (1) {
             capture >> frame;
             if (frame.empty())
