@@ -406,13 +406,18 @@ int main(int argc, const char** argv) {
                 break;
 
             if(qtd_rounds == 4) {
+                Mat FrameVitoria = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+                string textVitoria = "";
                 if(vitoriaJogador > vitoriaInimigo) {
-                    cout << "Jogador ganhou" << endl;
+                    textVitoria = "VICTORY";
                 } else if (vitoriaJogador < vitoriaInimigo) {
-                    cout << "Inimigo ganhou" << endl;
-                } else {
-                    cout << "Empate" << endl;
-                }
+                    textVitoria = "GAME OVER";
+                    system("mplayer game-over38511.mp3 &");
+                    system("mplayer game-over.mp3 &");
+                } 
+                putText(FrameVitoria, textVitoria, Point(200, 240), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                imshow(wName, FrameVitoria); // Mostra o frame
+                waitKey(4000); // Aguarda 2 segundos
                 break;
             }  
 
@@ -449,14 +454,19 @@ int main(int argc, const char** argv) {
                     } else if (vida < vidaInimigo*(-1)){
                         vitoriaInimigo++;
                     }
-                    
-                    cout << "Fim de round 1" << endl;
-                    Textemp(frame, tempo_round);
-                    sleep(2);
-                    tempo_round = 10;  // Garante que o tempo não fique negativo
+                    Mat fimRoundFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+                    string textRound = "Fim de round " + to_string(qtd_rounds);
+                    putText(fimRoundFrame, textRound, Point(200, 240), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                    imshow(wName, fimRoundFrame); // Mostra o frame
+                    waitKey(4000); // Aguarda 2 segundos
+
+                    // Reiniciar round
                     qtd_rounds++;
-                    vida = max_vida;
-                    vidaInimigo = maxVidaInimigo;   
+                    tempo_round = 10;  // Reiniciar o tempo do round
+                    vida = max_vida;  // Reiniciar a vida do jogador
+                    vidaInimigo = maxVidaInimigo;  // Reiniciar a vida do inimigo
+                    system("mplayer boxing_bell_sound2.mp3 &");
+                    waitKey(200);
                 }
                 start_time = current_time;  // Reinicia o tempo de referência
             }
@@ -470,7 +480,7 @@ int main(int argc, const char** argv) {
             if (!faces.empty() && acertouInimigo(faces[0])) {
                 cout << "Inimigo atingido!" << endl;
                 system("mplayer punch_sound.mp3 &");
-                vidaInimigo += 20; // Diminui vida ao acertar o inimigo
+                vidaInimigo += 2; // Diminui vida ao acertar o inimigo
                 inimigoHit = true; // Marca que o inimigo foi atingido
                 inimigoTempoVida = inimigoTempoMaximo; // Reinicia o tempo de vida do inimigo
             }
