@@ -1,5 +1,5 @@
 //Windows
-#include <windows.h>
+//#include <windows.h>
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
@@ -8,7 +8,7 @@
 #include <vector>
 #include <random>
 //Linux
-//#include <unistd.h>
+#include <unistd.h>
 #include <chrono>
 
 using namespace std;
@@ -46,10 +46,10 @@ const int PILL_SIZE = 15; // Tamanho da pílula
 string wName = "Game";
 
 //Linux
-//string cascade_path = "haarcascade_frontalface_default.xml";
+string cascade_path = "haarcascade_frontalface_default.xml";
 //Windows
 // Caminho para o classificador Haar
-string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
+//string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
 
 // Caminho para o arquivo de som
 //Linux
@@ -63,9 +63,9 @@ string sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/punch_sound2.mp3"; // 
 string life_sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/somvida.mp3";
 
 //Linux
-//string background_image = "IMG_9643.jpg";
+string background_image = "IMG_9643.jpg";
 //Windows
-string background_image = "C:/Users/pvc25/Downloads/ProjetoOpen/IMG_9643.jpg";
+//string background_image = "C:/Users/pvc25/Downloads/ProjetoOpen/IMG_9643.jpg";
 
 //Windows
 string boxing_bell_sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/boxing_bell_sound2.mp3";
@@ -150,7 +150,7 @@ void drawTarget(Mat& frame, Mat& enemy_image) {
     int centerY = targetPosition.y;
 
     Mat resizedTarget;
-    resize(enemy_image, resizedTarget, Size(60, 60)); // Redimensiona a imagem
+    resize(enemy_image, resizedTarget, Size(180, 180)); // Redimensiona a imagem
 
     Point topLeft(centerX - 50, centerY - 50); 
 
@@ -205,8 +205,8 @@ void drawEnemy(Mat& frame, const Mat& enemyface_image) {
     int centerX = enemyPosition.x + 10;
     int centerY = enemyPosition.y + 30;
 
-    int width = 120;  // Largura desejada da imagem
-    int height = 100; // Altura desejada da imagem
+    int width = 160;  // Largura desejada da imagem
+    int height = 140; // Altura desejada da imagem
 
     Mat resizedEnemy;
     resize(enemyface_image, resizedEnemy, Size(width, height)); // Redimensiona a imagem
@@ -308,8 +308,8 @@ void detectRed(Mat& frame, bool& inimigoHit) {
             if (hitEnemy(boundingBox)) {
                 cout << "Inimigo atingido!" << endl;
                 // Toca o som de soco
-                ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
-                //system("mplayer punch_sound.mp3 &");
+                //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                system("mplayer punch_sound.mp3 &");
                 enemyLife += 10; // Aplica dano ao inimigo(vida negativa)
                 inimigoHit = true; 
                 enemyTimeLife = enemyMaxTime;
@@ -354,7 +354,8 @@ void drawHealthbarPlayer(cv::Mat& frame, int health, int max_health) {
 }
 
 void drawHealthbarInimigo(Mat& frame, int health, int max_health) {
-    int xInimigo = 520; // Posição X do inimigo
+    //int xInimigo = 520; //Tela pequena no windows 
+    int xInimigo = 1140; // Posição X do inimigo
     int yInimigo = 30;  // Posição Y do inimigo
 
     int font = FONT_HERSHEY_SIMPLEX; 
@@ -402,13 +403,13 @@ void checkEnemyCooldown() {
 
 
 void TextMenu(Mat& frame) {
-    int xGame = 200;
+    int xGame = 179;
     int yGame = 400;
-    int xSair = 200;
+    int xSair = 179;
     int ySair = 450;
 
     int font = FONT_HERSHEY_SIMPLEX;
-    double fontScale = 1.0; 
+    double fontScale = 0.7; 
     Scalar textColor(0, 0, 0); 
     Scalar boxColor1(0, 255, 0); 
     Scalar boxColor2(0, 0, 255); 
@@ -416,14 +417,14 @@ void TextMenu(Mat& frame) {
     int lineType = LINE_AA;
 
     // Definir tamanhos para os textos
-    Size textSizeGame = getTextSize("NEW GAME", font, fontScale, thickness, nullptr);
-    Size textSizeSair = getTextSize("BACK", font, fontScale, thickness, nullptr);
+    Size textSizeGame = getTextSize("PRESS START ENTER", font, fontScale, thickness, nullptr);
+    Size textSizeSair = getTextSize("BACK - ESC", font, fontScale, thickness, nullptr);
 
     // Aumentar a margem das caixas
     int padding = 12; // Margem adicional ao redor do texto
 
     // Definir uma largura fixa para as caixas
-    int fixedWidth = 200; // Você pode ajustar esse valor conforme necessário
+    int fixedWidth = 250; // Você pode ajustar esse valor conforme necessário
 
     // Calcular posições das caixas
     Rect boxGame(Point(xGame - padding, yGame - textSizeGame.height - padding),
@@ -436,17 +437,19 @@ void TextMenu(Mat& frame) {
     rectangle(frame, boxSair, boxColor2, FILLED); // Caixa para "BACK"
 
     // Desenhar os textos
-    putText(frame, "NEW GAME", Point(xGame + (fixedWidth - textSizeGame.width) / 2, yGame),
+    putText(frame, "PRESS START ENTER", Point(xGame + (fixedWidth - textSizeGame.width) / 2, yGame),
             font, fontScale, textColor, thickness, lineType);
-    putText(frame, "BACK", Point(xSair + (fixedWidth - textSizeSair.width) / 2, ySair),
+    putText(frame, "BACK - ESC", Point(xSair + (fixedWidth - textSizeSair.width) / 2, ySair),
             font, fontScale, textColor, thickness, lineType);
 }
 
 void TextTime(Mat& frame, int& seconds) {
-    int xTextTime = 250;
-    int yTextTime = 25;
+    //int xTextTime = 570; //Telas pequenas
+    int xTextTime = 570;
+    int yTextTime = 30;
 
-    int XTime = 280; // Posição X no frame
+    //int XTime = 600; //Telas pequenas
+    int XTime = 600; // Posição X no frame
     int YTime = 70; // Posição Y no frame
 
     int font = cv::FONT_HERSHEY_SIMPLEX;
@@ -460,6 +463,25 @@ void TextTime(Mat& frame, int& seconds) {
     cv::putText(frame, time_text, cv::Point(XTime, YTime), font, fontScale, color, thickness, lineType);
 }
 
+// Função para iniciar a música e salvar o PID
+void startMusic(const std::string& musicPath) {
+    std::string command = "mplayer " + musicPath + " & echo $! > audio_pid.txt";
+    system(command.c_str());  // Inicia a música e armazena o PID em um arquivo
+}
+
+// Função para parar a música usando o PID
+void stopMusic() {
+    FILE* file = fopen("audio_pid.txt", "r");
+    if (file) {
+        int pid;
+        fscanf(file, "%d", &pid); // Lê o PID
+        fclose(file);
+
+        std::string killCommand = "kill " + std::to_string(pid);
+        system(killCommand.c_str()); // Mata o processo de música
+    }
+}
+
 int main(int argc, const char** argv) {
     VideoCapture capture;
     Mat frame;
@@ -469,15 +491,18 @@ int main(int argc, const char** argv) {
     setNumThreads(1);
     int life = 100;
     int max_life = 100;
-    int round_Time = 60;
+    int round_Time = 10;
     int playerVictory = 0;
     int enemyVictory = 0;
     int qtd_rounds = 1;
-
-    Mat enemypunch_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/socoadversario.png", IMREAD_UNCHANGED);
-    Mat enemyface_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/enemy_image4.png", IMREAD_UNCHANGED);
-    Mat pill_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/vida.png", IMREAD_UNCHANGED);
-
+    //Windows
+    //Mat enemypunch_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/socoadversario.png", IMREAD_UNCHANGED);
+    //Mat enemyface_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/enemy_image4.png", IMREAD_UNCHANGED);
+    //Mat pill_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/vida.png", IMREAD_UNCHANGED);
+    //Linux
+    Mat enemypunch_image = imread("socoadversario.png", IMREAD_UNCHANGED);
+    Mat enemyface_image = imread("enemy_image4.png", IMREAD_UNCHANGED);
+    Mat pill_image = imread("vida.png", IMREAD_UNCHANGED);
     capture.set(CAP_PROP_FPS, 60);  
 
     // Carregar o classificador Haar
@@ -502,8 +527,14 @@ int main(int argc, const char** argv) {
 
     // Redimensionar a imagem de fundo para o tamanho da janela, se necessário
     resize(backgroundImage, backgroundImage, Size(640, 480));
-
     TextMenu(backgroundImage);
+    std::system("mplayer menu_theme_song.mp3 & echo $! > audio_pid.txt");
+    
+    // Abra o arquivo que contém o PID do mplayer
+    FILE *file = fopen("audio_pid.txt", "r");
+    int pid;
+    fscanf(file, "%d", &pid); // Leia o PID
+    fclose(file);
 
     // Exibir o frame preto inicialmente
     imshow(wName, backgroundImage);
@@ -513,9 +544,13 @@ int main(int argc, const char** argv) {
     while (true) {
         key = (char)waitKey(10);
         if (key == 27) { // ESC para sair
+            string killCommand = "kill " + std::to_string(pid);
+            system(killCommand.c_str()); // Mata o processo mplayer
             return 0;
         } 
         if (key == 13) { // ENTER para iniciar
+            string killCommand = "kill " + std::to_string(pid);
+            system(killCommand.c_str()); // Mata o processo mplayer
             break;
         }
     }
@@ -529,7 +564,10 @@ int main(int argc, const char** argv) {
     if (capture.isOpened()) {
         cout << "Video capturing has been started ..." << endl;
         namedWindow(wName, WINDOW_NORMAL);
-
+        
+        waitKey(1000);
+        system("mplayer init_sound.mp3 &");
+        system("mplayer boxing_bell_sound2.mp3 &");
         vector<Rect> faces; // Para armazenar as faces detectadas
         bool faceHit = false; // Variável para rastrear se uma face foi atingida
         bool inimigoHit = false;
@@ -539,15 +577,15 @@ int main(int argc, const char** argv) {
 
         // Inicializar o inimigo
         initializeEnemy(Size(640, 480));
-        //sleep(3);
-        //system("mplayer boxing_bell_sound2.mp3 &");
-        ShellExecute(NULL, "open", boxing_bell_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+        
+        //ShellExecute(NULL, "open", boxing_bell_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
         
         // Inicializar a pílula verde
         srand(static_cast<unsigned int>(time(0))); // Inicializa o gerador de números aleatórios
         pillPosition = Point(0, 0);
         // Inicializa o tempo do cronômetro
         auto start_time = chrono::steady_clock::now();
+        startMusic("background_music.mp3");
         while (1) {
             capture >> frame;
             if (frame.empty())
@@ -555,22 +593,21 @@ int main(int argc, const char** argv) {
             drawColor(frame);
 
             if(qtd_rounds == 4) {
+                stopMusic();
                 Mat victoryFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
                 string victoryText = "";
                 if(playerVictory > enemyVictory) {
                     victoryText = "VICTORY";
                 } else if (playerVictory < enemyVictory) {
                     victoryText = "GAME OVER";
-                    //Linux
-                    //system("mplayer game-over38511.mp3 &");
-                    //system("mplayer game-over.mp3 &");
-                    //Windows
-                    ShellExecute(NULL, "open", gameover_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
-                    ShellExecute(NULL, "open", gameover2_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    
                 } 
-                putText(victoryFrame, victoryText, Point(200, 240), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                //Linux
+                system("mplayer windefeat_sound.mp3 &");
+                //Point windows - (200, 240)
+                putText(victoryFrame, victoryText, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
                 imshow(wName, victoryFrame); // Mostra o frame
-                waitKey(2000); // Aguarda 2 segundos
+                waitKey(4000); // Aguarda 2 segundos
                 break;
             }  
 
@@ -610,17 +647,15 @@ int main(int argc, const char** argv) {
                     } else if (life < enemyLife*(-1)){
                         enemyVictory++;
                     }
-                    
+                    stopMusic();
                     cout << "Fim de round 1" << endl;
                     TextTime(frame, round_Time);
-                    //Linux
-                    //sleep(2);
-                    //Windows
-                    Sleep(2000);
+                    waitKey(2000);
                     round_Time = 10;  // Garante que o tempo não fique negativo
                     qtd_rounds++;
                     life = max_life;
-                    enemyLife = maxenemyLife;   
+                    enemyLife = maxenemyLife;
+                    startMusic("background_music.mp3");
                 }
                 start_time = current_time;  
             }
@@ -653,9 +688,9 @@ int main(int argc, const char** argv) {
 
                 }
                 // Toca música no Linux
-                //system("mplayer punch_sound2.mp3 &");
+                system("mplayer punch_sound2.mp3 &");
                 // Tocar o som usando ShellExecute -- Windows
-                ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
                 targetTimeLife = targetMaxTime;
             }
 
@@ -665,8 +700,8 @@ int main(int argc, const char** argv) {
                 if (colectPill(face)) {
                     life += 10; 
                     // Toca o som no Linux
-                    //system("mplayer somlife.mp3 &");
-                    ShellExecute(NULL, "open", life_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    system("mplayer somlife.mp3 &");
+                    //ShellExecute(NULL, "open", life_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
                     if (life > max_life) life = max_life;
                     showPill = false;
                     pillPosition = Point(-100, -100); 
