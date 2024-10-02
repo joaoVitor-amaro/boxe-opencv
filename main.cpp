@@ -509,7 +509,7 @@ int main(int argc, const char** argv) {
     setNumThreads(1);
     int life = 100;
     int max_life = 100;
-    int round_Time = 40;
+    int round_Time = 10;
     int playerVictory = 0;
     int enemyVictory = 0;
     int qtd_rounds = 1;
@@ -610,6 +610,7 @@ int main(int argc, const char** argv) {
                 break;
             drawColor(frame);
 
+
             if(qtd_rounds == 4) {
                 stopMusic();
                 Mat victoryFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
@@ -666,13 +667,22 @@ int main(int argc, const char** argv) {
                         enemyVictory++;
                     }
                     stopMusic();
-                    cout << "Fim de round 1" << endl;
-                    TextTime(frame, round_Time);
-                    waitKey(2000);
-                    round_Time = 10;  // Garante que o tempo não fique negativo
+                    //Tela do Fim do Round
+                    Mat fimRoundFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+                    string textRound = "Fim do round " + to_string(qtd_rounds);
+                    putText(fimRoundFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                    imshow(wName, fimRoundFrame); // Mostra o frame
+                    waitKey(4000); // Aguarda 2 segundos
+
+                    // Reiniciar round
                     qtd_rounds++;
+                    round_Time = 10;  // Reiniciar o tempo do round
                     life = max_life;
                     enemyLife = maxenemyLife;
+                    playerStamina = maxPlayerStamina;
+                    enemyStamina = maxEnemyStamina;
+                    system("mplayer boxing_bell_sound2.mp3 &");
+                    waitKey(200);
                     startMusic("background_music.mp3");
                 }
                 start_time = current_time;  
@@ -688,7 +698,7 @@ int main(int argc, const char** argv) {
             faceHit = !faces.empty() && hitFace(faces[0]);
             if (faceHit && !enemyTired) {
                 cout << "Face atingida!" << endl;
-                life -= 10; 
+                life -= 20; 
                 enemyHits++;
                 enemyStamina -= 20;
 
