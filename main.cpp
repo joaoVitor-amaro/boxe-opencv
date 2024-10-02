@@ -25,8 +25,10 @@ int enemyMaxTime; // Tempo máximo que o inimigo fica na tela
 int widthEnemy = 40;
 int lenghtEnemy = 80;
 bool enemyTired = false;
+bool PlayerTired = false;
 int enemyHits;
 int enemyCooldownTime = 8; // Tempo de cooldown em segundos
+int playerCooldownTime = 8;
 chrono::steady_clock::time_point cooldownStartTime; // Para gravar o início do cooldown
 
 int enemyLife = -100; // life inicial do inimigo
@@ -304,17 +306,34 @@ void detectRed(Mat& frame, bool& inimigoHit) {
         if (contours[i].size() > 0) {
             Rect boundingBox = boundingRect(contours[i]);
             rectangle(frame, boundingBox.tl(), boundingBox.br(), Scalar(255, 0, 0), 2);
+            if(playerStamina > 0) {
+                if (hitEnemy(boundingBox)) {
+                    cout << "Inimigo atingido!" << endl;
+                    // Toca o som de soco
+                    //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    system("mplayer punch_sound.mp3 &");
+                    enemyLife += 10; // Aplica dano ao inimigo(vida negativa)
+                    inimigoHit = true; 
+                    enemyTimeLife = enemyMaxTime;
+                    playerStamina -= 20;
+                } 
+            } else {
+                //A stamina do player chegou a 0
+                PlayerTired = true;
+            }
+        }
+    }
+}
 
-            if (hitEnemy(boundingBox)) {
-                cout << "Inimigo atingido!" << endl;
-                // Toca o som de soco
-                //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
-                system("mplayer punch_sound.mp3 &");
-                enemyLife += 10; // Aplica dano ao inimigo(vida negativa)
-                inimigoHit = true; 
-                enemyTimeLife = enemyMaxTime;
-            } 
-        
+void checkplayerCooldown() {
+    if (PlayerTired) {
+        auto currentTime = chrono::steady_clock::now();
+        auto cooldownElapsed = chrono::duration_cast<chrono::seconds>(currentTime - cooldownStartTime).count();   
+        if (cooldownElapsed >= playerCooldownTime) {
+            // O tempo de cooldown terminou, o jogador pode voltar a atacar
+            PlayerTired = false;
+            playerStamina = maxPlayerStamina; // Recupera a stamina do jogador
+            cout << "Jogador recuperado e pode atacar novamente!" << endl;
         }
     }
 }
@@ -390,12 +409,11 @@ void drawHealthbarInimigo(Mat& frame, int health, int max_health) {
 void checkEnemyCooldown() {
     if (enemyTired) {
         auto currentTime = chrono::steady_clock::now();
-        auto cooldownElapsed = chrono::duration_cast<chrono::seconds>(currentTime - cooldownStartTime).count();
-
+        auto cooldownElapsed = chrono::duration_cast<chrono::seconds>(currentTime - cooldownStartTime).count();   
         if (cooldownElapsed >= enemyCooldownTime) {
             // O tempo de cooldown terminou, o inimigo pode voltar a atacar
             enemyTired = false;
-            enemyStamina = maxEnemyStamina; // Recupera a stamina do inimigo
+            enemyStamina += 100; // Recupera a stamina do inimigo
             cout << "Inimigo recuperado e pode atacar novamente!" << endl;
         }
     }
@@ -491,7 +509,7 @@ int main(int argc, const char** argv) {
     setNumThreads(1);
     int life = 100;
     int max_life = 100;
-    int round_Time = 10;
+    int round_Time = 40;
     int playerVictory = 0;
     int enemyVictory = 0;
     int qtd_rounds = 1;
@@ -634,7 +652,7 @@ int main(int argc, const char** argv) {
             }
 
             checkEnemyCooldown();
-
+            checkplayerCooldown();
             auto current_time = chrono::steady_clock::now();
             auto elapsed_seconds = chrono::duration_cast<chrono::seconds>(current_time - start_time).count();
 
