@@ -10,9 +10,6 @@
 #include <mmsystem.h> 
 #pragma comment(lib, "winmm.lib")
 #include <chrono>
-
-//Linux
-//#include <unistd.h>
 using namespace std;
 using namespace cv;
 
@@ -49,25 +46,17 @@ const int PILL_SIZE = 15; // Tamanho da pílula
 // Nome da janela
 string wName = "Game";
 
-//Linux
-//string cascade_path = "haarcascade_frontalface_default.xml";
 //Windows
 // Caminho para o classificador Haar
 string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
 
 // Caminho para o arquivo de som
-//Linux
-//string sound_path = "punch_sound2.mp3";
 //Windows
 string sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/punch_sound2.mp3"; // Altere para o caminho do seu arquivo de som
 
-//Linux
-//string life_sound_path = "somlife.mp3";
 //Windows
 string life_sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/somvida.mp3";
 
-//Linux
-//string background_image = "IMG_9643.jpg";
 //Windows
 string background_image = "C:/Users/pvc25/Downloads/ProjetoOpen/IMG_9643.jpg";
 
@@ -522,7 +511,7 @@ int main(int argc, const char** argv) {
     int qtd_rounds = 1;
 
     Mat enemypunch_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/socoadversario.png", IMREAD_UNCHANGED);
-    Mat enemyface_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/imagem cinza.png", IMREAD_UNCHANGED);
+    Mat enemyface_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/enemy_image4.png", IMREAD_UNCHANGED);
     Mat pill_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/vida.png", IMREAD_UNCHANGED);
 
     capture.set(CAP_PROP_FPS, 60);  
