@@ -50,7 +50,6 @@ string wName = "Game";
 // Caminho para o classificador Haar
 string cascade_path = "C:/Users/pvc25/Downloads/ProjetoOpen/haarcascade_frontalface_default.xml";
 
-// Caminho para o arquivo de som
 //Windows
 string sound_path = "C:/Users/pvc25/Downloads/ProjetoOpen/punch_sound2.mp3"; // Altere para o caminho do seu arquivo de som
 
@@ -511,7 +510,7 @@ int main(int argc, const char** argv) {
     int qtd_rounds = 1;
 
     Mat enemypunch_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/socoadversario.png", IMREAD_UNCHANGED);
-    Mat enemyface_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/enemy_image4.png", IMREAD_UNCHANGED);
+    Mat enemyface_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/imagem cinza.png", IMREAD_UNCHANGED);
     Mat pill_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/vida.png", IMREAD_UNCHANGED);
 
     capture.set(CAP_PROP_FPS, 60);  
@@ -533,7 +532,8 @@ int main(int argc, const char** argv) {
         enemyLife = -100; // life inicial do inimigo
         maxenemyLife = -100; // life máxima do inimigo
         // Criar uma janela para exibição
-        namedWindow(wName, WINDOW_AUTOSIZE);
+        namedWindow(wName, WINDOW_NORMAL);
+        resizeWindow(wName, 1024, 768);
 
 
         // Criar uma imagem de fundo
@@ -583,7 +583,7 @@ int main(int argc, const char** argv) {
             auto start_time = chrono::steady_clock::now();
 
     // Criar uma janela para exibição
-    namedWindow(wName, WINDOW_AUTOSIZE);
+    namedWindow(wName, WINDOW_NORMAL);
 
 
     // Criar uma imagem de fundo
