@@ -83,7 +83,7 @@ void initializeTarget(Size frameSize) {
     int yPos = rand() % (frameSize.height - 2 * margin) + margin; // Posição aleatória no eixo y
     targetPosition = Point(xPos, yPos); // Inicializa a posição em um local aleatório na tela
     targetTimeLife = 0; // Inicializa o contador de life
-    targetMaxTime = 8; // Define o tempo máximo que a luva fica na tela (100 frames)
+    targetMaxTime = 5; // Define o tempo máximo que a luva fica na tela (100 frames)
 }
 
 void initializeEnemy(Size frameSize) {
@@ -92,17 +92,15 @@ void initializeEnemy(Size frameSize) {
     int yPos = rand() % (frameSize.height - 2 * margin) + margin;
     enemyPosition = Point(xPos, yPos); // Inicializa a posição em um local aleatório na tela
     enemyTimeLife = 0; // Inicializa o contador de life
-    enemyMaxTime = 8; // Define o tempo máximo que a luva fica na tela (100 frames)
+    enemyMaxTime = 15; // Define o tempo máximo que a luva fica na tela (100 frames)
 }
 
 void drawPill(Mat& frame, Mat &pill_image) {
     if (showPill) {
-        //int pillRadius = 15; // Defina o tamanho do círculo da pílula
-        //circle(frame, pillPosition, pillRadius, Scalar(0, 255, 0), -1); // Desenha um círculo verde
         int centerX = pillPosition.x;
         int centerY = pillPosition.y;
 
-        pillPosition.y += 7;
+        pillPosition.y += 10;
 
         // Redimensiona a imagem se necessário
         Mat resizedPill;
@@ -152,7 +150,7 @@ void drawTarget(Mat& frame, Mat& enemy_image) {
     int centerY = targetPosition.y;
 
     Mat resizedTarget;
-    resize(enemy_image, resizedTarget, Size(180, 180)); // Redimensiona a imagem
+    resize(enemy_image, resizedTarget, Size(100, 100)); // Redimensiona a imagem
 
     Point topLeft(centerX - 50, centerY - 50); 
 
@@ -190,7 +188,7 @@ void faceDetect(Mat& frame, CascadeClassifier& cascade, vector<Rect>& faces, boo
     cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
     equalizeHist(grayFrame, grayFrame);
 
-    cascade.detectMultiScale(grayFrame, faces, 1.3, 2, 0 | CASCADE_SCALE_IMAGE, Size(40, 40));
+    cascade.detectMultiScale(grayFrame, faces, 1.3, 2, 0 | CASCADE_SCALE_IMAGE, Size(110, 110));
 
     for (size_t i = 0; i < faces.size(); i++) {
         Rect r = faces[i];
@@ -207,8 +205,8 @@ void drawEnemy(Mat& frame, const Mat& enemyface_image) {
     int centerX = enemyPosition.x + 10;
     int centerY = enemyPosition.y + 30;
 
-    int width = 160;  // Largura desejada da imagem
-    int height = 140; // Altura desejada da imagem
+    int width = 190;  // Largura desejada da imagem
+    int height = 190; // Altura desejada da imagem
 
     Mat resizedEnemy;
     resize(enemyface_image, resizedEnemy, Size(width, height)); // Redimensiona a imagem
@@ -315,7 +313,7 @@ void detectRed(Mat& frame, bool& inimigoHit) {
                     enemyLife += 10; // Aplica dano ao inimigo(vida negativa)
                     inimigoHit = true; 
                     enemyTimeLife = enemyMaxTime;
-                    playerStamina -= 20;
+                    playerStamina -= 40;
                 } 
             } else {
                 //A stamina do player chegou a 0
@@ -413,7 +411,7 @@ void checkEnemyCooldown() {
         if (cooldownElapsed >= enemyCooldownTime) {
             // O tempo de cooldown terminou, o inimigo pode voltar a atacar
             enemyTired = false;
-            enemyStamina += 100; // Recupera a stamina do inimigo
+            enemyStamina = 100; // Recupera a stamina do inimigo
             cout << "Inimigo recuperado e pode atacar novamente!" << endl;
         }
     }
@@ -461,9 +459,9 @@ void TextMenu(Mat& frame) {
             font, fontScale, textColor, thickness, lineType);
 }
 
-void TextTime(Mat& frame, int& seconds) {
+void TextTime(Mat& frame, int& seconds, int round) {
     //int xTextTime = 570; //Telas pequenas
-    int xTextTime = 570;
+    int xTextTime = 490;
     int yTextTime = 30;
 
     //int XTime = 600; //Telas pequenas
@@ -476,9 +474,16 @@ void TextTime(Mat& frame, int& seconds) {
     int thickness = 2;
     int lineType = cv::LINE_AA;
     string time_text = to_string(seconds); 
+    string text = "Tempo - Round " + to_string(round);
+    putText(frame, text, Point(xTextTime, yTextTime), font, fontScale, color, thickness, lineType);
+    putText(frame, time_text, Point(XTime, YTime), font, fontScale, color, thickness, lineType);
+}
 
-    cv::putText(frame, "Tempo", cv::Point(xTextTime, yTextTime), font, fontScale, color, thickness, lineType);
-    cv::putText(frame, time_text, cv::Point(XTime, YTime), font, fontScale, color, thickness, lineType);
+void displayText(string& text, string& windowName) {
+    // Cria um frame preto (tela de vitória)
+    Mat victoryFrame = Mat::zeros(600, 800, CV_8UC3);
+    putText(victoryFrame, text, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+    imshow(windowName, victoryFrame);
 }
 
 // Função para iniciar a música e salvar o PID
@@ -528,239 +533,268 @@ int main(int argc, const char** argv) {
         cout << "ERROR: Could not load classifier cascade: " << cascade_path << endl;
         return -1;
     }
+    while(true) {
+        stopMusic();
+        int life = 100;
+        int max_life = 100;
+        int round_Time = 100;
+        int playerVictory = 0;
+        int enemyVictory = 0;
+        int qtd_rounds = 1;
+        enemyLife = -100; // life inicial do inimigo
+        maxenemyLife = -100; // life máxima do inimigo
+        // Criar uma janela para exibição
+        namedWindow(wName, WINDOW_AUTOSIZE);
 
-    // Criar uma janela para exibição
-    namedWindow(wName, WINDOW_AUTOSIZE);
+        //Mat frame2 = Mat::zeros(500, 500, CV_8UC3); // Cria um frame preto
 
-    //Mat frame2 = Mat::zeros(500, 500, CV_8UC3); // Cria um frame preto
+        // Criar uma imagem de fundo
+        Mat backgroundImage = imread(background_image);
 
-    // Criar uma imagem de fundo
-    Mat backgroundImage = imread(background_image);
-
-    // Verificar se a imagem foi carregada corretamente
-    if (backgroundImage.empty()) {
-        cout << "Erro ao carregar a imagem de fundo!" << endl;
-        return -1;
-    }
-
-    // Redimensionar a imagem de fundo para o tamanho da janela, se necessário
-    resize(backgroundImage, backgroundImage, Size(640, 480));
-    TextMenu(backgroundImage);
-    std::system("mplayer menu_theme_song.mp3 & echo $! > audio_pid.txt");
-    
-    // Abra o arquivo que contém o PID do mplayer
-    FILE *file = fopen("audio_pid.txt", "r");
-    int pid;
-    fscanf(file, "%d", &pid); // Leia o PID
-    fclose(file);
-
-    // Exibir o frame preto inicialmente
-    imshow(wName, backgroundImage);
-    cout << "Pressione 'ENTER' para iniciar a câmera." << endl;
-
-    // Aguardar até que a tecla 'ENTER' seja pressionada
-    while (true) {
-        key = (char)waitKey(10);
-        if (key == 27) { // ESC para sair
-            string killCommand = "kill " + std::to_string(pid);
-            system(killCommand.c_str()); // Mata o processo mplayer
-            return 0;
-        } 
-        if (key == 13) { // ENTER para iniciar
-            string killCommand = "kill " + std::to_string(pid);
-            system(killCommand.c_str()); // Mata o processo mplayer
-            break;
+        // Verificar se a imagem foi carregada corretamente
+        if (backgroundImage.empty()) {
+            cout << "Erro ao carregar a imagem de fundo!" << endl;
+            return -1;
         }
-    }
 
-    // Abrir webcam
-    if (!capture.open(0)) {
-        cout << "Capture from camera #0 didn't work" << endl;
-        return 1;
-    }
-
-    if (capture.isOpened()) {
-        cout << "Video capturing has been started ..." << endl;
-        namedWindow(wName, WINDOW_NORMAL);
+        // Redimensionar a imagem de fundo para o tamanho da janela, se necessário
+        resize(backgroundImage, backgroundImage, Size(640, 480));
+        TextMenu(backgroundImage);
+        std::system("mplayer menu_theme_song.mp3 & echo $! > audio_pid.txt");
         
-        waitKey(1000);
-        system("mplayer init_sound.mp3 &");
-        system("mplayer boxing_bell_sound2.mp3 &");
-        vector<Rect> faces; // Para armazenar as faces detectadas
-        bool faceHit = false; // Variável para rastrear se uma face foi atingida
-        bool inimigoHit = false;
+        // Abra o arquivo que contém o PID do mplayer
+        FILE *file = fopen("audio_pid.txt", "r");
+        int pid;
+        fscanf(file, "%d", &pid); // Leia o PID
+        fclose(file);
 
-        // Inicializar a primeira luva
-        initializeTarget(Size(640, 480));
+        // Exibir o frame preto inicialmente
+        imshow(wName, backgroundImage);
+        cout << "Pressione 'ENTER' para iniciar a câmera." << endl;
 
-        // Inicializar o inimigo
-        initializeEnemy(Size(640, 480));
-        
-        //ShellExecute(NULL, "open", boxing_bell_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
-        
-        // Inicializar a pílula verde
-        srand(static_cast<unsigned int>(time(0))); // Inicializa o gerador de números aleatórios
-        pillPosition = Point(0, 0);
-        // Inicializa o tempo do cronômetro
-        auto start_time = chrono::steady_clock::now();
-        startMusic("background_music.mp3");
-        while (1) {
-            capture >> frame;
-            if (frame.empty())
-                break;
-            drawColor(frame);
-
-
-            if(qtd_rounds == 4) {
-                stopMusic();
-                Mat victoryFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
-                string victoryText = "";
-                if(playerVictory > enemyVictory) {
-                    victoryText = "VICTORY";
-                } else if (playerVictory < enemyVictory) {
-                    victoryText = "GAME OVER";
-                    
-                } 
-                //Linux
-                system("mplayer windefeat_sound.mp3 &");
-                //Point windows - (200, 240)
-                putText(victoryFrame, victoryText, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
-                imshow(wName, victoryFrame); // Mostra o frame
-                waitKey(4000); // Aguarda 2 segundos
-                break;
-            }  
-
-            // Inverter a imagem horizontalmente
-            flip(frame, frame, 1); // 1 significa inverter horizontalmente
-
-            if (key == 0) 
-                resizeWindow(wName, static_cast<int>(frame.cols / scale), static_cast<int>(frame.rows / scale));
-
-            // Detectar rostos no frame original
-            faceDetect(frame, cascade, faces, faceHit);
-
-            // Detectar vermelhos no frame original
-            detectRed(frame, inimigoHit);
-
-            // Verificar se a luva deve ser desenhada
-            if (targetTimeLife < targetMaxTime) {
-                drawTarget(frame, enemypunch_image);
-            }
-
-            // Verificar se o inimigo deve ser desenhado
-            if (enemyTimeLife < enemyMaxTime) {
-                drawEnemy(frame, enemyface_image);
-            }
-
-            checkEnemyCooldown();
-            checkplayerCooldown();
-            auto current_time = chrono::steady_clock::now();
-            auto elapsed_seconds = chrono::duration_cast<chrono::seconds>(current_time - start_time).count();
-
-            // Reduz o tempo em um segundo a cada segundo
-            if (elapsed_seconds >= 1) {
-                round_Time -= 1;
-                if (round_Time == 0) {
-                    if(life > enemyLife*(-1)) {
-                        playerVictory++;
-                    } else if (life < enemyLife*(-1)){
-                        enemyVictory++;
-                    }
-                    stopMusic();
-                    //Tela do Fim do Round
-                    Mat fimRoundFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
-                    string textRound = "Fim do round " + to_string(qtd_rounds);
-                    putText(fimRoundFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
-                    imshow(wName, fimRoundFrame); // Mostra o frame
-                    waitKey(4000); // Aguarda 2 segundos
-
-                    // Reiniciar round
-                    qtd_rounds++;
-                    round_Time = 10;  // Reiniciar o tempo do round
-                    life = max_life;
-                    enemyLife = maxenemyLife;
-                    playerStamina = maxPlayerStamina;
-                    enemyStamina = maxEnemyStamina;
-                    system("mplayer boxing_bell_sound2.mp3 &");
-                    waitKey(200);
-                    startMusic("background_music.mp3");
-                }
-                start_time = current_time;  
-            }
-
-            //Texto do tempo
-            TextTime(frame, round_Time);
-            //Barra de life dos jogador e Inimigo
-            drawHealthbarPlayer(frame, life, max_life);
-            drawHealthbarInimigo(frame, enemyLife, maxenemyLife);
-            
-
-            faceHit = !faces.empty() && hitFace(faces[0]);
-            if (faceHit && !enemyTired) {
-                cout << "Face atingida!" << endl;
-                life -= 20; 
-                enemyHits++;
-                enemyStamina -= 20;
-
-                if (life < 0) life = 0; 
-                if (life < 25 && !showPill) {
-                    pillPosition = Point(rand() % frame.cols, 0);
-                    showPill = true; // Exibe a pílula
-                    pillPosition.y += 5;
-                }
-
-                if (enemyStamina <= 0){
-                    enemyStamina = 0;
-                    enemyTired = true;
-                    cooldownStartTime = chrono::steady_clock::now();
-
-                }
-                // Toca música no Linux
-                system("mplayer punch_sound2.mp3 &");
-                // Tocar o som usando ShellExecute -- Windows
-                //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
-                targetTimeLife = targetMaxTime;
-            }
-
-            drawPill(frame, pill_image);
-
-            for (Rect& face : faces) {
-                if (colectPill(face)) {
-                    life += 10; 
-                    // Toca o som no Linux
-                    system("mplayer somlife.mp3 &");
-                    //ShellExecute(NULL, "open", life_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
-                    if (life > max_life) life = max_life;
-                    showPill = false;
-                    pillPosition = Point(-100, -100); 
-                    break;
-                }
-            }
-            if (enemyTimeLife < enemyMaxTime) {
-                enemyTimeLife++; 
-            } else {
-                initializeEnemy(frame.size());
-            }
-
-            if (enemyLife >= 0) {
-                enemyLife = maxenemyLife; 
-                initializeEnemy(frame.size());
-            }
-
-            if (targetTimeLife < targetMaxTime) {
-                targetTimeLife++;
-            } else {
-                initializeTarget(frame.size());
-            }
-
-            detectRed(frame, inimigoHit);
-            imshow(wName, frame);
-
+        // Aguardar até que a tecla 'ENTER' seja pressionada
+        while (true) {
             key = (char)waitKey(10);
-            if (key == 27) // Pressionar ESC
+            if (key == 27) { // ESC para sair
+                string killCommand = "kill " + std::to_string(pid);
+                system(killCommand.c_str()); // Mata o processo mplayer
+                return 0;
+            } 
+            if (key == 13) { // ENTER para iniciar
+                string killCommand = "kill " + std::to_string(pid);
+                system(killCommand.c_str()); // Mata o processo mplayer
                 break;
-            if (getWindowProperty(wName, WND_PROP_VISIBLE) == 1)
-                continue;
+            }
+        }
+
+        // Abrir webcam
+        if (!capture.open(0)) {
+            cout << "Capture from camera #0 didn't work" << endl;
+            return 1;
+        }
+
+        if (capture.isOpened()) {
+            cout << "Video capturing has been started ..." << endl;
+            namedWindow(wName, WINDOW_NORMAL);
+            
+            waitKey(1000);
+            system("mplayer init_sound.mp3 &");
+            system("mplayer boxing_bell_sound2.mp3 &");
+            vector<Rect> faces; // Para armazenar as faces detectadas
+            bool faceHit = false; // Variável para rastrear se uma face foi atingida
+            bool inimigoHit = false;
+
+            // Inicializar a primeira luva
+            initializeTarget(Size(640, 480));
+
+            // Inicializar o inimigo
+            initializeEnemy(Size(640, 480));
+            
+            //ShellExecute(NULL, "open", boxing_bell_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+            
+            // Inicializar a pílula verde
+            srand(static_cast<unsigned int>(time(0))); // Inicializa o gerador de números aleatórios
+            pillPosition = Point(0, 0);
+            // Inicializa o tempo do cronômetro
+            auto start_time = chrono::steady_clock::now();
+            startMusic("background_music.mp3");
+            while (1) {
+                capture >> frame;
+                if (frame.empty())
+                    break;
+                drawColor(frame);
+
+
+                if(qtd_rounds == 4) {
+                    stopMusic();
+                    Mat victoryFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+                    string victoryText = "";
+                    if(playerVictory > enemyVictory) {
+                        victoryText = "VICTORY";
+                    } else if (playerVictory < enemyVictory) {
+                        victoryText = "GAME OVER";
+                        
+                    } 
+                    //Linux
+                    system("mplayer windefeat_sound.mp3 &");
+                    //Point windows - (200, 240)
+                    putText(victoryFrame, victoryText, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                    imshow(wName, victoryFrame); // Mostra o frame
+                    waitKey(4000); // Aguarda 2 segundos
+                    break;
+                }  
+
+                // Inverter a imagem horizontalmente
+                flip(frame, frame, 1); // 1 significa inverter horizontalmente
+
+                if (key == 0) 
+                    resizeWindow(wName, static_cast<int>(frame.cols / scale), static_cast<int>(frame.rows / scale));
+
+                // Detectar rostos no frame original
+                faceDetect(frame, cascade, faces, faceHit);
+
+                // Detectar vermelhos no frame original
+                detectRed(frame, inimigoHit);
+
+                // Verificar se a luva deve ser desenhada
+                if (targetTimeLife < targetMaxTime) {
+                    drawTarget(frame, enemypunch_image);
+                }
+
+                // Verificar se o inimigo deve ser desenhado
+                if (enemyTimeLife < enemyMaxTime) {
+                    drawEnemy(frame, enemyface_image);
+                }
+
+                checkEnemyCooldown();
+                checkplayerCooldown();
+                auto current_time = chrono::steady_clock::now();
+                auto elapsed_seconds = chrono::duration_cast<chrono::seconds>(current_time - start_time).count();
+
+                // Reduz o tempo em um segundo a cada segundo
+                if (elapsed_seconds >= 1) {
+                    round_Time -= 1;
+                    if (round_Time == 0) {
+                        if(life > enemyLife*(-1)) {
+                            playerVictory++;
+                        } else if (life < enemyLife*(-1)){
+                            enemyVictory++;
+                        }
+                        stopMusic();
+                        //Tela do Fim do Round
+                        Mat fimRoundFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+                        string textRound = "Fim do round " + to_string(qtd_rounds);
+                        putText(fimRoundFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                        imshow(wName, fimRoundFrame); // Mostra o frame
+                        waitKey(4000); // Aguarda 2 segundos
+
+                        // Reiniciar round
+                        qtd_rounds++;
+                        round_Time = 10;  // Reiniciar o tempo do round
+                        life = max_life;
+                        enemyLife = maxenemyLife;
+                        playerStamina = maxPlayerStamina;
+                        enemyStamina = maxEnemyStamina;
+                        system("mplayer boxing_bell_sound2.mp3 &");
+                        waitKey(200);
+                        startMusic("background_music.mp3");
+                    }
+                    start_time = current_time;  
+                }
+
+                //Texto do tempo
+                TextTime(frame, round_Time, qtd_rounds);
+                //Barra de life dos jogador e Inimigo
+                drawHealthbarPlayer(frame, life, max_life);
+                drawHealthbarInimigo(frame, enemyLife, maxenemyLife);
+                
+
+                faceHit = !faces.empty() && hitFace(faces[0]);
+                if (faceHit && !enemyTired) {
+                    cout << "Face atingida!" << endl;
+                    life -= 10; 
+                    enemyHits++;
+                    enemyStamina -= 20;
+
+                    if (life <= 0){
+                        life = 0;
+                        system("mplayer windefeat_sound.mp3 &");
+                        Mat playerKnockoutFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+                        string textRound = "Jogador nocauteado ";
+                        putText(playerKnockoutFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                        imshow(wName, playerKnockoutFrame); // Mostra o frame
+                        waitKey(4000); // Aguarda 2 segundos
+                        break;
+                    } 
+                    if (life < 25 && !showPill) {
+                        pillPosition = Point(rand() % frame.cols, 0);
+                        showPill = true; // Exibe a pílula
+                        pillPosition.y += 5;
+                    }
+
+                    if (enemyStamina <= 0){
+                        enemyStamina = 0;
+                        enemyTired = true;
+                        cooldownStartTime = chrono::steady_clock::now();
+
+                    }
+                    // Toca música no Linux
+                    system("mplayer punch_sound2.mp3 &");
+                    // Tocar o som usando ShellExecute -- Windows
+                    //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    targetTimeLife = targetMaxTime;
+                }
+
+                /**/
+
+                drawPill(frame, pill_image);
+
+                for (Rect& face : faces) {
+                    if (colectPill(face)) {
+                        life += 10; 
+                        // Toca o som no Linux
+                        system("mplayer somlife.mp3 &");
+                        //ShellExecute(NULL, "open", life_sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                        if (life > max_life) life = max_life;
+                        showPill = false;
+                        pillPosition = Point(-100, -100); 
+                        break;
+                    }
+                }
+
+                if (enemyTimeLife < enemyMaxTime) {
+                    enemyTimeLife++; 
+                } else {
+                    if (enemyLife >= 0) {
+                        system("mplayer windefeat_sound.mp3 &");
+                        Mat enemyKnockoutFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+                        string textRound = "Inimigo nocauteado ";
+                        putText(enemyKnockoutFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                        imshow(wName, enemyKnockoutFrame); // Mostra o frame
+                        waitKey(4000); // Aguarda 2 segundos
+                        break;
+                    } else {
+                        enemyTimeLife++; 
+                        initializeEnemy(frame.size());
+                    }
+                }
+
+                if (targetTimeLife < targetMaxTime) {
+                    targetTimeLife++;
+                } else {
+                    initializeTarget(frame.size());
+                }
+
+                detectRed(frame, inimigoHit);
+
+                imshow(wName, frame);
+
+                key = (char)waitKey(10);
+                if (key == 27) // Pressionar ESC
+                    break;
+                if (getWindowProperty(wName, WND_PROP_VISIBLE) == 1)
+                    continue;
+            }
         }
     }
     cout << playerVictory << endl;
