@@ -7,12 +7,120 @@
 #include <iostream>
 #include <vector>
 #include <random>
+//#include "ArquivoRecords.h"
 //Linux
 #include <unistd.h>
 #include <chrono>
+#include <fstream>
 
 using namespace std;
 using namespace cv;
+
+//Class para registar o name e time do nocaute do User
+class RecordsKnockout {
+private:
+    string name; // Nome do lutador
+    int time_knockout; // Tempo do nocaute
+public:
+    RecordsKnockout();
+    RecordsKnockout(string nome, int time_knockout); // Construtor
+    string listRecords(); // Método para listar registros
+    int getTimeKnockout();
+};
+
+RecordsKnockout::RecordsKnockout() {
+    this->name = "";
+    this->time_knockout = 0;
+}
+
+RecordsKnockout::RecordsKnockout(string name, int time_knockout) {
+    this->name = name;
+    this->time_knockout = time_knockout;
+}
+
+// Método para listar registros
+string RecordsKnockout::listRecords() {
+    string textRecords = this->name + " " + to_string(this->time_knockout);
+    return textRecords;
+}
+
+int RecordsKnockout::getTimeKnockout() {
+    return this->time_knockout;
+}
+
+//Classe de armazenar os dados no arquivo
+class ArquivoRecords {
+private:
+    vector<RecordsKnockout> records; // Vetor para armazenar os registros
+public:
+    ArquivoRecords(); // Construtor padrão
+    void adicionarRecords(string nome, int time_knockout); // Construtor com parâmetros
+    void saveRecordsFile(); // Método para salvar os registros em um arquivo
+    void lerArquivos(); //Ler os dados do arquivos e armazenar no vector
+    void ordernarRecords(); //Ordenar os recordes
+};
+
+ArquivoRecords::ArquivoRecords() {
+    
+}
+
+// Construtor com parâmetros
+void ArquivoRecords::adicionarRecords(string nome, int time_knockout) {
+    RecordsKnockout record(nome, time_knockout);
+    this->records.push_back(record);
+}
+
+// Método para salvar os registros em um arquivo
+void ArquivoRecords::saveRecordsFile() {
+    ofstream arquivo("recordes.txt");
+    ordernarRecords();
+    if (arquivo.is_open()) {
+        for (int i = 0; i < this->records.size(); i++) {
+            arquivo << this->records[i].listRecords() << endl; // Chama o método listRecords
+        }
+        arquivo.close();
+    } else {
+        cout << "Erro ao abrir o arquivo" << endl;
+    }
+}
+
+void ArquivoRecords::lerArquivos() {
+    ifstream arquivo("recordes.txt");
+    if(!arquivo.is_open()) {
+        cout << "Arquivo nao aberto" << endl;
+    }
+    string linha;
+    while(getline(arquivo, linha)) {
+        istringstream iss(linha);
+        string nome, time_record;
+        // Extraindo os valores da linha lida
+        if (iss >> nome >> time_record) {
+            try {
+                int time_knockout = stoi(time_record);
+                adicionarRecords(nome, time_knockout);
+            } catch (const invalid_argument& e) {
+                cout << "Erro ao converter o tempo para número: " << e.what() << endl;
+            }
+        }
+    }
+    arquivo.close();
+}
+
+void ArquivoRecords::ordernarRecords() {
+   //Variavel armazena temporariamente um objeto durante a troca de posicao 
+   RecordsKnockout aux; 
+    if(this->records.size() > 1) {
+        for(int i = 0; i < this->records.size(); i++) {
+            for(int j = 0; j < i + 1; j++) {
+                if(this->records[i].getTimeKnockout() < this->records[j].getTimeKnockout()) {
+                    aux = this->records[i];
+                    this->records[i] = this->records[j];
+                    this->records[j] = aux;
+                }
+            }
+        }
+    }
+}
 
 Point targetPosition;
 int targetTimeLife; 
@@ -311,7 +419,7 @@ void detectRed(Mat& frame, bool& inimigoHit) {
                     // Toca o som de soco
                     //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
                     system("mplayer punch_sound.mp3 &");
-                    enemyLife += 10; // Aplica dano ao inimigo(vida negativa)
+                    enemyLife += 50; // Aplica dano ao inimigo(vida negativa)
                     inimigoHit = true; 
                     enemyTimeLife = enemyMaxTime;
                     playerStamina -= 40;
@@ -557,10 +665,12 @@ int main(int argc, const char** argv) {
     setNumThreads(1);
     int life = 100;
     int max_life = 100;
-    int round_Time = 10;
+    int round_Time = 40;
     int playerVictory = 0;
     int enemyVictory = 0;
     int qtd_rounds = 1;
+    ArquivoRecords records;
+    records.lerArquivos(); //Armazena os dados do arquivo no vector
     //Windows
     //Mat enemypunch_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/socoadversario.png", IMREAD_UNCHANGED);
     //Mat enemyface_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/enemy_image4.png", IMREAD_UNCHANGED);
@@ -581,13 +691,13 @@ int main(int argc, const char** argv) {
         //Renicia as variaveis para a nova luta
         life = 100;
         max_life = 100;
-        round_Time = 10;
+        round_Time = 40;
         playerVictory = 0;
         enemyVictory = 0;
         qtd_rounds = 1;
         enemyLife = -100; 
         maxenemyLife = -100; 
-        //inputText = "";
+        inputText = "";
         // Criar uma janela para exibição
         namedWindow(wName, WINDOW_AUTOSIZE);
 
@@ -621,9 +731,9 @@ int main(int argc, const char** argv) {
         while (true) {
             key = (char)waitKey(10);
             if (key == 27) { // ESC para sair
+                records.saveRecordsFile();
                 string killCommand = "kill " + std::to_string(pid);
                 system(killCommand.c_str()); // Mata o processo mplayer
-                cout << "Teste nome: "<< inputText << endl;
                 return 0;
             } 
             if (key == 13) { // ENTER para iniciar
@@ -743,7 +853,7 @@ int main(int argc, const char** argv) {
 
                         // Reiniciar round
                         qtd_rounds++;
-                        round_Time = 10;  // Reiniciar o tempo do round
+                        round_Time = 40;  // Reiniciar o tempo do round
                         life = max_life;
                         enemyLife = maxenemyLife;
                         playerStamina = maxPlayerStamina;
@@ -819,6 +929,8 @@ int main(int argc, const char** argv) {
                     enemyTimeLife++; 
                 } else {
                     if (enemyLife >= 0) {
+                        int recordTime = 40 - round_Time;
+                        records.adicionarRecords(inputText, recordTime);
                         system("mplayer windefeat_sound.mp3 &");
                         Mat enemyKnockoutFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
                         string textRound = "Inimigo nocauteado ";
