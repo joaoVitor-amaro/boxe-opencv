@@ -46,6 +46,7 @@ const int PILL_SIZE = 15; // Tamanho da pílula
 
 // Nome da janela
 string wName = "Game";
+string inputText = "";  // Texto digitado pelo usuário
 
 //Linux
 string cascade_path = "haarcascade_frontalface_default.xml";
@@ -505,6 +506,48 @@ void stopMusic() {
     }
 }
 
+// Função para desenhar a caixa de texto
+void drawTextBox(Mat& img) {
+    // Desenhar a caixa de texto (borda)
+    rectangle(img, Point(160, 200), Point(450, 250), Scalar(0, 0, 0), 2);
+    putText(img, "DIGITE O SEU NOME", Point(160, 190), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255, 255, 255), 2);
+    // Colocar o texto dentro da caixa
+    putText(img, inputText, Point(170, 235), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2);
+    rectangle(img, Point(220, 260), Point(400, 300), Scalar(0, 0, 255), FILLED); // -1 ou FILLED para preencher
+    putText(img, "ENTER", Point(260, 290), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 0), 2);
+}
+
+void drawStringTextBox(Mat& img) {
+    while (true) {
+        int key = waitKey(0);  // Aguarda a entrada de uma tecla
+
+        // Se pressionar a tecla ESC, sai do loop
+        if (key == 27) {
+            continue;
+        }
+        // Se pressionar a tecla ENTER, sai do loop
+        else if (key == 13) {
+            break;
+        }
+        // Se pressionar a tecla BACKSPACE, remove o último caractere
+        else if (key == 8 && !inputText.empty()) {
+            inputText.pop_back();  // Remove o último caractere
+        }
+        // Caso contrário, adicione o caractere digitado ao texto
+        else if (key >= 32 && key <= 126) {  // Apenas caracteres imprimíveis
+            inputText += (char)key;
+        }
+
+        // Limpa a imagem e desenha a nova caixa de texto
+        img = imread("telaUser.jpg");
+        resize(img, img, Size(640, 480));
+        drawTextBox(img);
+
+        // Atualiza a janela com o novo texto
+        imshow(wName, img);
+    }
+}
+
 int main(int argc, const char** argv) {
     VideoCapture capture;
     Mat frame;
@@ -535,14 +578,16 @@ int main(int argc, const char** argv) {
     }
     while(true) {
         stopMusic();
-        int life = 100;
-        int max_life = 100;
-        int round_Time = 100;
-        int playerVictory = 0;
-        int enemyVictory = 0;
-        int qtd_rounds = 1;
-        enemyLife = -100; // life inicial do inimigo
-        maxenemyLife = -100; // life máxima do inimigo
+        //Renicia as variaveis para a nova luta
+        life = 100;
+        max_life = 100;
+        round_Time = 10;
+        playerVictory = 0;
+        enemyVictory = 0;
+        qtd_rounds = 1;
+        enemyLife = -100; 
+        maxenemyLife = -100; 
+        //inputText = "";
         // Criar uma janela para exibição
         namedWindow(wName, WINDOW_AUTOSIZE);
 
@@ -578,6 +623,7 @@ int main(int argc, const char** argv) {
             if (key == 27) { // ESC para sair
                 string killCommand = "kill " + std::to_string(pid);
                 system(killCommand.c_str()); // Mata o processo mplayer
+                cout << "Teste nome: "<< inputText << endl;
                 return 0;
             } 
             if (key == 13) { // ENTER para iniciar
@@ -586,6 +632,13 @@ int main(int argc, const char** argv) {
                 break;
             }
         }
+
+        Mat img = imread("telaUser.jpg");
+        resize(img, img, Size(640, 480));
+        drawTextBox(img);
+        imshow(wName, img);
+        drawStringTextBox(img);  // Aguarda até que o nome seja digitado completamente
+
 
         // Abrir webcam
         if (!capture.open(0)) {
