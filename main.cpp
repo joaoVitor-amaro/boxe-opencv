@@ -7,7 +7,6 @@
 #include <iostream>
 #include <vector>
 #include <random>
-//#include "ArquivoRecords.h"
 //Linux
 #include <unistd.h>
 #include <chrono>
@@ -23,9 +22,10 @@ private:
     int time_knockout; // Tempo do nocaute
 public:
     RecordsKnockout();
-    RecordsKnockout(string nome, int time_knockout); // Construtor
+    RecordsKnockout(string name, int time_knockout); // Construtor
     string listRecords(); // Método para listar registros
-    int getTimeKnockout();
+    int getTimeKnockout() const;
+    string getName() const;
 };
 
 RecordsKnockout::RecordsKnockout() {
@@ -44,36 +44,41 @@ string RecordsKnockout::listRecords() {
     return textRecords;
 }
 
-int RecordsKnockout::getTimeKnockout() {
+int RecordsKnockout::getTimeKnockout() const {
     return this->time_knockout;
 }
 
+string RecordsKnockout::getName() const {
+    return this->name;
+}
+
 //Classe de armazenar os dados no arquivo
-class ArquivoRecords {
+class FilesRecords {
 private:
     vector<RecordsKnockout> records; // Vetor para armazenar os registros
 public:
-    ArquivoRecords(); // Construtor padrão
-    void adicionarRecords(string nome, int time_knockout); // Construtor com parâmetros
+    FilesRecords(); // Construtor padrão
+    void addRecords(string name, int time_knockout); // Construtor com parâmetros
     void saveRecordsFile(); // Método para salvar os registros em um arquivo
-    void lerArquivos(); //Ler os dados do arquivos e armazenar no vector
-    void ordernarRecords(); //Ordenar os recordes
+    void readFiles(); //Ler os dados do arquivos e armazenar no vector
+    void orderRecords(); //Ordenar os recordes
+    vector<RecordsKnockout> getRecords();
 };
 
-ArquivoRecords::ArquivoRecords() {
+FilesRecords::FilesRecords() {
     
 }
 
 // Construtor com parâmetros
-void ArquivoRecords::adicionarRecords(string nome, int time_knockout) {
-    RecordsKnockout record(nome, time_knockout);
+void FilesRecords::addRecords(string name, int time_knockout) {
+    RecordsKnockout record(name, time_knockout);
     this->records.push_back(record);
 }
 
 // Método para salvar os registros em um arquivo
-void ArquivoRecords::saveRecordsFile() {
+void FilesRecords::saveRecordsFile() {
     ofstream arquivo("recordes.txt");
-    ordernarRecords();
+    orderRecords();
     if (arquivo.is_open()) {
         for (int i = 0; i < this->records.size(); i++) {
             arquivo << this->records[i].listRecords() << endl; // Chama o método listRecords
@@ -84,7 +89,7 @@ void ArquivoRecords::saveRecordsFile() {
     }
 }
 
-void ArquivoRecords::lerArquivos() {
+void FilesRecords::readFiles() {
     ifstream arquivo("recordes.txt");
     if(!arquivo.is_open()) {
         cout << "Arquivo nao aberto" << endl;
@@ -92,21 +97,22 @@ void ArquivoRecords::lerArquivos() {
     string linha;
     while(getline(arquivo, linha)) {
         istringstream iss(linha);
-        string nome, time_record;
+        string name, time_record;
         // Extraindo os valores da linha lida
-        if (iss >> nome >> time_record) {
+        if (iss >> name >> time_record) {
             try {
                 int time_knockout = stoi(time_record);
-                adicionarRecords(nome, time_knockout);
+                addRecords(name, time_knockout);
             } catch (const invalid_argument& e) {
                 cout << "Erro ao converter o tempo para número: " << e.what() << endl;
             }
         }
     }
+    orderRecords();
     arquivo.close();
 }
 
-void ArquivoRecords::ordernarRecords() {
+void FilesRecords::orderRecords() {
    //Variavel armazena temporariamente um objeto durante a troca de posicao 
    RecordsKnockout aux; 
     if(this->records.size() > 1) {
@@ -120,6 +126,10 @@ void ArquivoRecords::ordernarRecords() {
             }
         }
     }
+}
+
+vector<RecordsKnockout> FilesRecords::getRecords() {
+    return this->records;
 }
 
 Point targetPosition;
@@ -543,7 +553,7 @@ void TextMenu(Mat& frame) {
 
     // Definir tamanhos para os textos
     Size textSizeGame = getTextSize("PRESS START ENTER", font, fontScale, thickness, nullptr);
-    Size textSizeSair = getTextSize("BACK - ESC", font, fontScale, thickness, nullptr);
+    Size textSizeSair = getTextSize("EXIT - ESC", font, fontScale, thickness, nullptr);
 
     // Aumentar a margem das caixas
     int padding = 12; // Margem adicional ao redor do texto
@@ -656,6 +666,66 @@ void drawStringTextBox(Mat& img) {
     }
 }
 
+string formatTimeRecords(int timeRecords){
+    string textRecord = "";
+    int timeMinRecords = timeRecords / 60;    // Divide por 60 para obter os minutos
+    int timeSecondsRecords = timeRecords % 60; // Resto da divisão para obter os segundos
+
+    if(timeMinRecords > 0) {
+        if(timeSecondsRecords >= 10) {
+            textRecord = "0" + to_string(timeMinRecords) + ":" + to_string(timeSecondsRecords) + ":00";
+        } else {
+            textRecord = "0" + to_string(timeMinRecords) + ":0" + to_string(timeSecondsRecords) + ":00";
+        }
+    } else {
+        if(timeRecords >= 10) {
+            textRecord = "00:" + to_string(timeRecords) + ":00";
+        } else {
+            textRecord = "00:0" + to_string(timeRecords) + ":00";
+        }
+    }
+    return textRecord;
+}
+
+void drawTextRecords(Mat& img, const vector<RecordsKnockout>& records) {
+    putText(img, "Recordes de Nocautes", Point(20, 80), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2);
+    
+    int y = 120; // Posição inicial para desenhar os recordes
+    string text = "";
+    string timeRecord = "";
+    if(records.size() >= 5) {
+        for(int i = 0; i < 5; i++) {
+            int time = records[i].getTimeKnockout();
+            text = to_string(i+1) + " " + records[i].getName() + " " + formatTimeRecords(time);
+            putText(img, text, Point(30, y), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(256, 255, 255), 1);
+            y += 50;
+        }
+    } else {
+        for(int i = 0; i < records.size(); i++) {
+            int time = records[i].getTimeKnockout();
+            text = to_string(i+1) + " " + records[i].getName() + " " + formatTimeRecords(time);
+            putText(img, text, Point(30, y), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(256, 255, 255), 1);
+            y += 50;
+        }
+    }
+    rectangle(img, Point(200, 350), Point(420, 390), Scalar(0, 0, 255), FILLED); // -1 ou FILLED para preencher
+    putText(img, "BACK - ESC", Point(240, 380), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0, 0, 0), 2);
+}
+
+void drawRecords(Mat& img, const vector<RecordsKnockout>& records) {
+    while (true) {
+        int key = waitKey(0);
+        
+        img = imread("telaUser.jpg");
+        resize(img, img, Size(640, 480));
+        drawTextRecords(img, records);
+        imshow(wName, img);
+        if (key == 27) {
+            break; // ENTER para voltar
+        }
+    }
+}
+
 int main(int argc, const char** argv) {
     VideoCapture capture;
     Mat frame;
@@ -669,8 +739,8 @@ int main(int argc, const char** argv) {
     int playerVictory = 0;
     int enemyVictory = 0;
     int qtd_rounds = 1;
-    ArquivoRecords records;
-    records.lerArquivos(); //Armazena os dados do arquivo no vector
+    FilesRecords records;
+    records.readFiles(); //Armazena os dados do arquivo no vector
     //Windows
     //Mat enemypunch_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/socoadversario.png", IMREAD_UNCHANGED);
     //Mat enemyface_image = imread("C:/Users/pvc25/Downloads/ProjetoOpen/enemy_image4.png", IMREAD_UNCHANGED);
@@ -697,7 +767,7 @@ int main(int argc, const char** argv) {
         qtd_rounds = 1;
         enemyLife = -100; 
         maxenemyLife = -100; 
-        inputText = "";
+        //inputText = "";
         // Criar uma janela para exibição
         namedWindow(wName, WINDOW_AUTOSIZE);
 
@@ -725,10 +795,11 @@ int main(int argc, const char** argv) {
 
         // Exibir o frame preto inicialmente
         imshow(wName, backgroundImage);
+        Mat menuBackup = backgroundImage.clone();
         cout << "Pressione 'ENTER' para iniciar a câmera." << endl;
-
         // Aguardar até que a tecla 'ENTER' seja pressionada
         while (true) {
+            TextMenu(backgroundImage);
             key = (char)waitKey(10);
             if (key == 27) { // ESC para sair
                 records.saveRecordsFile();
@@ -737,18 +808,26 @@ int main(int argc, const char** argv) {
                 return 0;
             } 
             if (key == 13) { // ENTER para iniciar
-                string killCommand = "kill " + std::to_string(pid);
-                system(killCommand.c_str()); // Mata o processo mplayer
                 break;
             }
+             if (key == 'q') { // 'q' para sair
+                Mat imgRecords = imread("telaUser.jpg"); // Tela de fundo do recordes e do nome do user
+                resize(imgRecords, imgRecords, Size(640, 480));
+                //Uma lista de recordes ou um codigo quebrado misterioso?
+                //Deixem quieto essa funcao abaixo
+                vector<RecordsKnockout> tempRecords = records.getRecords();
+                drawRecords(imgRecords, tempRecords);
+                backgroundImage = menuBackup.clone();  // Restaura o estado do menu
+                imshow(wName, backgroundImage);  
+            }
         }
-
-        Mat img = imread("telaUser.jpg");
-        resize(img, img, Size(640, 480));
-        drawTextBox(img);
-        imshow(wName, img);
-        drawStringTextBox(img);  // Aguarda até que o nome seja digitado completamente
-
+        Mat imgName = imread("telaUser.jpg"); //Tela de fundo do recordes e do nome do user
+        resize(imgName, imgName, Size(640, 480));
+        drawTextBox(imgName);
+        imshow(wName, imgName);
+        drawStringTextBox(imgName);  // Aguarda até que o nome seja digitado completamente
+        string killCommand = "kill " + std::to_string(pid);
+        system(killCommand.c_str()); // Mata o processo mplayer
 
         // Abrir webcam
         if (!capture.open(0)) {
@@ -929,8 +1008,15 @@ int main(int argc, const char** argv) {
                     enemyTimeLife++; 
                 } else {
                     if (enemyLife >= 0) {
-                        int recordTime = 40 - round_Time;
-                        records.adicionarRecords(inputText, recordTime);
+                        int recordTime;
+                        if(qtd_rounds == 2) {
+                            recordTime = 40 + round_Time;
+                        }else if(qtd_rounds == 3) {
+                            recordTime = 80 + round_Time;
+                        } else {
+                            recordTime = 40 - round_Time;
+                        }
+                        records.addRecords(inputText, recordTime);
                         system("mplayer windefeat_sound.mp3 &");
                         Mat enemyKnockoutFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
                         string textRound = "Inimigo nocauteado ";
