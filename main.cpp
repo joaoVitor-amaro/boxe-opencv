@@ -542,44 +542,54 @@ void checkEnemyCooldown() {
 
 void TextMenu(Mat& frame) {
     int xGame = 179;
-    int yGame = 400;
+    int yGame = 370;
+    int xRecords = 179;
+    int yRecords = 415;  // Posicionar entre "New Game" e "Back"
     int xSair = 179;
-    int ySair = 450;
+    int ySair = 460;
 
     int font = FONT_HERSHEY_SIMPLEX;
     double fontScale = 0.7; 
     Scalar textColor(0, 0, 0); 
-    Scalar boxColor1(0, 255, 0); 
-    Scalar boxColor2(0, 0, 255); 
+    Scalar boxColor1(0, 255, 0);  // Verde para "New Game"
+    Scalar boxColor2(255, 255, 0); // Amarelo para "Records"
+    Scalar boxColor3(0, 0, 255);  // Vermelho para "Back"
     int thickness = 2; 
     int lineType = LINE_AA;
 
     // Definir tamanhos para os textos
     Size textSizeGame = getTextSize("PRESS START ENTER", font, fontScale, thickness, nullptr);
-    Size textSizeSair = getTextSize("EXIT - ESC", font, fontScale, thickness, nullptr);
+    Size textSizeRecords = getTextSize("RECORDS", font, fontScale, thickness, nullptr);
+    Size textSizeSair = getTextSize("BACK - ESC", font, fontScale, thickness, nullptr);
 
     // Aumentar a margem das caixas
     int padding = 12; // Margem adicional ao redor do texto
 
     // Definir uma largura fixa para as caixas
-    int fixedWidth = 250; // Você pode ajustar esse valor conforme necessário
+    int fixedWidth = 250; // Ajustar conforme necessário
 
     // Calcular posições das caixas
     Rect boxGame(Point(xGame - padding, yGame - textSizeGame.height - padding),
                  Size(fixedWidth, textSizeGame.height + padding * 2));
+    Rect boxRecords(Point(xRecords - padding, yRecords - textSizeRecords.height - padding),
+                    Size(fixedWidth, textSizeRecords.height + padding * 2));
     Rect boxSair(Point(xSair - padding, ySair - textSizeSair.height - padding),
                  Size(fixedWidth, textSizeSair.height + padding * 2));
 
     // Desenhar as caixas
-    rectangle(frame, boxGame, boxColor1, FILLED); // Caixa para "NEW GAME"
-    rectangle(frame, boxSair, boxColor2, FILLED); // Caixa para "BACK"
+    rectangle(frame, boxGame, boxColor1, FILLED);    // Caixa para "NEW GAME"
+    rectangle(frame, boxRecords, boxColor2, FILLED); // Caixa para "RECORDS"
+    rectangle(frame, boxSair, boxColor3, FILLED);    // Caixa para "BACK"
 
     // Desenhar os textos
     putText(frame, "PRESS START ENTER", Point(xGame + (fixedWidth - textSizeGame.width) / 2, yGame),
             font, fontScale, textColor, thickness, lineType);
+    putText(frame, "RECORDS", Point(xRecords + (fixedWidth - textSizeRecords.width) / 2, yRecords),
+            font, fontScale, textColor, thickness, lineType);
     putText(frame, "BACK - ESC", Point(xSair + (fixedWidth - textSizeSair.width) / 2, ySair),
             font, fontScale, textColor, thickness, lineType);
 }
+
 
 void TextTime(Mat& frame, int& seconds, int round) {
     //int xTextTime = 570; //Telas pequenas
@@ -813,7 +823,7 @@ int main(int argc, const char** argv) {
             if (key == 13) { // ENTER para iniciar
                 break;
             }
-             if (key == 'q') { // 'q' para sair
+             if (key == 'r' || key == 'R') { // 'q' para sair
                 Mat imgRecords = imread("telaUser.jpg"); // Tela de fundo do recordes e do nome do user
                 resize(imgRecords, imgRecords, Size(640, 480));
                 //Uma lista de recordes ou um codigo quebrado misterioso?
