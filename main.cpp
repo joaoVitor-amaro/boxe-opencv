@@ -429,10 +429,13 @@ void detectRed(Mat& frame, bool& inimigoHit) {
                     // Toca o som de soco
                     //ShellExecute(NULL, "open", sound_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
                     system("mplayer punch_sound.mp3 &");
-                    enemyLife += 50; // Aplica dano ao inimigo(vida negativa)
+                    enemyLife += 10; // Aplica dano ao inimigo(vida negativa)
                     inimigoHit = true; 
                     enemyTimeLife = enemyMaxTime;
                     playerStamina -= 40;
+                    if(playerStamina <= 0) {
+                        playerStamina = 0;
+                    }
                 } 
             } else {
                 //A stamina do player chegou a 0
