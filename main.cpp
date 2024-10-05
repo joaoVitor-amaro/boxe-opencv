@@ -7,10 +7,11 @@
 #include <iostream>
 #include <vector>
 #include <random>
-//Linux
 #include <unistd.h>
 #include <chrono>
 #include <fstream>
+#include <sys/types.h>
+#include <signal.h>
 
 using namespace std;
 using namespace cv;
@@ -739,6 +740,11 @@ void drawRecords(Mat& img, const vector<RecordsKnockout>& records) {
     }
 }
 
+bool isProcessRunning(int pid) {
+    // O comando kill com o sinal 0 não mata o processo, mas verifica se ele existe
+    return (kill(pid, 0) == 0);
+}
+
 int main(int argc, const char** argv) {
     VideoCapture capture;
     Mat frame;
@@ -810,10 +816,23 @@ int main(int argc, const char** argv) {
         imshow(wName, backgroundImage);
         Mat menuBackup = backgroundImage.clone();
         cout << "Pressione 'ENTER' para iniciar a câmera." << endl;
+        Mat imgRecords = imread("telaUser.jpg"); // Tela de fundo do recordes e do nome do user
+        resize(imgRecords, imgRecords, Size(640, 480));
         // Aguardar até que a tecla 'ENTER' seja pressionada
         while (true) {
+            // Verifica se o processo de música ainda está rodando
+            if (!isProcessRunning(pid)) {
+                // Se o processo terminou, reinicie a música
+                std::system("mplayer menu_theme_song.mp3 & echo $! > audio_pid.txt");
+                
+                // Atualiza o novo PID
+                file = fopen("audio_pid.txt", "r");
+                fscanf(file, "%d", &pid); // Leia o novo PID
+                fclose(file);
+            }
             TextMenu(backgroundImage);
-            key = (char)waitKey(10);
+            imshow(wName, backgroundImage);
+            key = (char)waitKey(2);
             if (key == 27) { // ESC para sair
                 records.saveRecordsFile();
                 string killCommand = "kill " + std::to_string(pid);
@@ -823,9 +842,7 @@ int main(int argc, const char** argv) {
             if (key == 13) { // ENTER para iniciar
                 break;
             }
-             if (key == 'r' || key == 'R') { // 'q' para sair
-                Mat imgRecords = imread("telaUser.jpg"); // Tela de fundo do recordes e do nome do user
-                resize(imgRecords, imgRecords, Size(640, 480));
+            if (key == 'r' || key == 'R') { // 'q' para sair
                 //Uma lista de recordes ou um codigo quebrado misterioso?
                 //Deixem quieto essa funcao abaixo
                 vector<RecordsKnockout> tempRecords = records.getRecords();
