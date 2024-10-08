@@ -41,7 +41,7 @@ RecordsKnockout::RecordsKnockout(string name, int time_knockout) {
 
 // Método para listar registros
 string RecordsKnockout::listRecords() {
-    string textRecords = this->name + " " + to_string(this->time_knockout);
+    string textRecords = this->name + ";" + to_string(this->time_knockout);
     return textRecords;
 }
 
@@ -74,6 +74,8 @@ FilesRecords::FilesRecords() {
 void FilesRecords::addRecords(string name, int time_knockout) {
     RecordsKnockout record(name, time_knockout);
     this->records.push_back(record);
+    orderRecords();
+
 }
 
 // Método para salvar os registros em um arquivo
@@ -92,26 +94,31 @@ void FilesRecords::saveRecordsFile() {
 
 void FilesRecords::readFiles() {
     ifstream arquivo("recordes.txt");
-    if(!arquivo.is_open()) {
-        cout << "Arquivo nao aberto" << endl;
+    if (!arquivo.is_open()) {
+        cout << "Arquivo não aberto" << endl;
+        return;  // Retorna caso o arquivo não seja aberto
     }
+    
     string linha;
-    while(getline(arquivo, linha)) {
+    while (getline(arquivo, linha)) {
         istringstream iss(linha);
         string name, time_record;
-        // Extraindo os valores da linha lida
-        if (iss >> name >> time_record) {
+
+        // Usando getline para ler até o delimitador ';'
+        if (getline(iss, name, ';') && getline(iss, time_record, ';')) {
             try {
-                int time_knockout = stoi(time_record);
-                addRecords(name, time_knockout);
+                int time_knockout = stoi(time_record);  // Converte string para int
+                addRecords(name, time_knockout);  // Adiciona o recorde
             } catch (const invalid_argument& e) {
                 cout << "Erro ao converter o tempo para número: " << e.what() << endl;
             }
         }
     }
-    orderRecords();
-    arquivo.close();
+
+    orderRecords();  // Ordena os recordes
+    arquivo.close();  // Fecha o arquivo
 }
+
 
 void FilesRecords::orderRecords() {
    //Variavel armazena temporariamente um objeto durante a troca de posicao 
@@ -1051,6 +1058,11 @@ int main(int argc, const char** argv) {
                         Mat enemyKnockoutFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
                         string textRound = "Inimigo nocauteado ";
                         putText(enemyKnockoutFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                        //vector<RecordsKnockout> recordes = records.getRecords();
+                        //string textRecord = "Recorde Batido";
+                        /*if(recordTime < recordes.front().getTimeKnockout()) {
+                          putText(enemyKnockoutFrame, textRecord, Point(520, 450), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                        }*/
                         imshow(wName, enemyKnockoutFrame); // Mostra o frame
                         waitKey(4000); // Aguarda 2 segundos
                         break;
