@@ -619,6 +619,30 @@ void TextTime(Mat& frame, int& seconds, int round) {
     putText(frame, time_text, Point(XTime, YTime), font, fontScale, color, thickness, lineType);
 }
 
+//Funcoes de placares
+void scorePlayer(Mat& frame, int playerVictory) {
+    int xTextScorePlayer = 0;
+    int yTextScorePlayer = 110;
+    int font = cv::FONT_HERSHEY_SIMPLEX;
+    double fontScale = 1.0;
+    cv::Scalar color(255, 0, 0); 
+    int thickness = 2;
+    int lineType = cv::LINE_AA;
+    string text = "Pontuacao: " + to_string(playerVictory);
+    putText(frame, text, Point(xTextScorePlayer, yTextScorePlayer), font, fontScale, color, thickness, lineType);
+}
+void scoreEnemy(Mat& frame, int enemyVictory) {
+    int xTextScoreEnemy = 1050;
+    int yTextScoreEnemy = 110;
+    int font = cv::FONT_HERSHEY_SIMPLEX;
+    double fontScale = 1.0;
+    cv::Scalar color(255, 0, 0); 
+    int thickness = 2;
+    int lineType = cv::LINE_AA;
+    string text = "Pontuacao: " + to_string(enemyVictory);
+    putText(frame, text, Point(xTextScoreEnemy, yTextScoreEnemy), font, fontScale, color, thickness, lineType);
+}
+
 void displayText(string& text, string& windowName) {
     // Cria um frame preto (tela de vitória)
     Mat victoryFrame = Mat::zeros(600, 800, CV_8UC3);
@@ -806,7 +830,9 @@ int main(int argc, const char** argv) {
         enemyVictory = 0;
         qtd_rounds = 1;
         enemyLife = -100; 
-        maxenemyLife = -100; 
+        maxenemyLife = -100;
+        int playerStamina = 100;
+        int enemyStamina = 100; 
         //inputText = "";
         // Criar uma janela para exibição
         namedWindow(wName, WINDOW_AUTOSIZE);
@@ -1001,7 +1027,8 @@ int main(int argc, const char** argv) {
                 //Barra de life dos jogador e Inimigo
                 drawHealthbarPlayer(frame, life, max_life);
                 drawHealthbarInimigo(frame, enemyLife, maxenemyLife);
-                
+                scorePlayer(frame, playerVictory);
+                scoreEnemy(frame, enemyVictory);
 
                 faceHit = !faces.empty() && hitFace(faces[0]);
                 if (faceHit && !enemyTired) {
