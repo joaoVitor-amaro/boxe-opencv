@@ -752,6 +752,18 @@ bool isProcessRunning(int pid) {
     return (kill(pid, 0) == 0);
 }
 
+void textKnockout(Mat& frame, string text_knockout) {
+    Mat frameKnockout = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+    putText(frameKnockout, text_knockout, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+    imshow(wName, frameKnockout); // Mostra o frame
+}
+
+void textCheckWinner(Mat& frame, string text_winner) {
+    Mat victoryFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
+    putText(victoryFrame, text_winner, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+    imshow(wName, victoryFrame); // Mostra o frame
+}
+
 int main(int argc, const char** argv) {
     VideoCapture capture;
     Mat frame;
@@ -765,6 +777,8 @@ int main(int argc, const char** argv) {
     int playerVictory = 0;
     int enemyVictory = 0;
     int qtd_rounds = 1;
+    string text_winner;
+    string text_knockout;
     FilesRecords records;
     records.readFiles(); //Armazena os dados do arquivo no vector
     //Windows
@@ -822,7 +836,6 @@ int main(int argc, const char** argv) {
         // Exibir o frame preto inicialmente
         imshow(wName, backgroundImage);
         Mat menuBackup = backgroundImage.clone();
-        cout << "Pressione 'ENTER' para iniciar a câmera." << endl;
         Mat imgRecords = imread("telaUser.jpg"); // Tela de fundo do recordes e do nome do user
         resize(imgRecords, imgRecords, Size(640, 480));
         // Aguardar até que a tecla 'ENTER' seja pressionada
@@ -906,7 +919,6 @@ int main(int argc, const char** argv) {
 
                 if(qtd_rounds == 4) {
                     stopMusic();
-                    Mat victoryFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
                     string victoryText = "";
                     if(playerVictory > enemyVictory) {
                         victoryText = "VICTORY";
@@ -917,8 +929,7 @@ int main(int argc, const char** argv) {
                     //Linux
                     system("mplayer windefeat_sound.mp3 &");
                     //Point windows - (200, 240)
-                    putText(victoryFrame, victoryText, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
-                    imshow(wName, victoryFrame); // Mostra o frame
+                    textCheckWinner(frame, victoryText);
                     waitKey(4000); // Aguarda 2 segundos
                     break;
                 }  
@@ -953,17 +964,21 @@ int main(int argc, const char** argv) {
                 // Reduz o tempo em um segundo a cada segundo
                 if (elapsed_seconds >= 1) {
                     round_Time -= 1;
+                    string text_winnerRound;
                     if (round_Time == 0) {
                         if(life > enemyLife*(-1)) {
                             playerVictory++;
+                            text_winnerRound = "Jogador venceu o ROUND " + to_string(qtd_rounds);
                         } else if (life < enemyLife*(-1)){
                             enemyVictory++;
+                            text_winnerRound = "Inimigo venceu o ROUND " + to_string(qtd_rounds);
                         }
                         stopMusic();
                         //Tela do Fim do Round
                         Mat fimRoundFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
                         string textRound = "Fim do round " + to_string(qtd_rounds);
                         putText(fimRoundFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
+                        putText(fimRoundFrame, text_winnerRound, Point(420, 450), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
                         imshow(wName, fimRoundFrame); // Mostra o frame
                         waitKey(4000); // Aguarda 2 segundos
 
@@ -997,11 +1012,13 @@ int main(int argc, const char** argv) {
 
                     if (life <= 0){
                         life = 0;
+                        stopMusic();
                         system("mplayer windefeat_sound.mp3 &");
-                        Mat playerKnockoutFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
-                        string textRound = "Jogador nocauteado ";
-                        putText(playerKnockoutFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
-                        imshow(wName, playerKnockoutFrame); // Mostra o frame
+                        text_knockout = "JOGADOR NOCAUTEADO";
+                        textKnockout(frame, text_knockout);
+                        waitKey(4000); // Aguarda 2 segundos
+                        text_winner = "GAME OVER";
+                        textCheckWinner(frame, text_winner);
                         waitKey(4000); // Aguarda 2 segundos
                         break;
                     } 
@@ -1053,18 +1070,15 @@ int main(int argc, const char** argv) {
                         } else {
                             recordTime = 40 - round_Time;
                         }
+                        stopMusic();
                         records.addRecords(inputText, recordTime);
                         system("mplayer windefeat_sound.mp3 &");
-                        Mat enemyKnockoutFrame = Mat::zeros(frame.size(), frame.type()); // Cria um frame preto
-                        string textRound = "Inimigo nocauteado ";
-                        putText(enemyKnockoutFrame, textRound, Point(520, 400), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
-                        //vector<RecordsKnockout> recordes = records.getRecords();
-                        //string textRecord = "Recorde Batido";
-                        /*if(recordTime < recordes.front().getTimeKnockout()) {
-                          putText(enemyKnockoutFrame, textRecord, Point(520, 450), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 2); // Escreve no frame
-                        }*/
-                        imshow(wName, enemyKnockoutFrame); // Mostra o frame
-                        waitKey(4000); // Aguarda 2 segundos
+                        text_knockout = "INIMIGO NOCAUTEADO";
+                        textKnockout(frame, text_knockout);
+                        waitKey(4000); // Aguarda 4 segundos
+                        text_winner = "VICTORY";
+                        textCheckWinner(frame, text_winner);
+                        waitKey(4000); // Aguarda 4 segundos
                         break;
                     } else {
                         enemyTimeLife++; 
@@ -1090,8 +1104,6 @@ int main(int argc, const char** argv) {
             }
         }
     }
-    cout << playerVictory << endl;
-    cout << enemyVictory << endl;
     capture.release();
     destroyAllWindows();
     return 0;
