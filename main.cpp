@@ -92,6 +92,7 @@ void FilesRecords::saveRecordsFile() {
     }
 }
 
+//Funcao para ler os dados dos arquivos
 void FilesRecords::readFiles() {
     ifstream arquivo("recordes.txt");
     if (!arquivo.is_open()) {
