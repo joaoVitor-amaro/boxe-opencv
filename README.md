@@ -45,7 +45,7 @@ Este projeto foi desenvolvido como parte do aprendizado na disciplina de Linguag
     <img src="UML.jpeg"></img>
 </div>
 
-## Dependencies
+## Dependências
 
 Este projeto em C++ utiliza funcionalidades da biblioteca padrão do C++, bem como a biblioteca OpenCV para detectação de objetos e reconhecimento facial. Abaixo estão listadas as bibliotecas necessárias e como instalá-las.
 
