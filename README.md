@@ -1,7 +1,7 @@
 <h1>🥊 Dodge & Punch</h1>
 
 <div align="center">
-    <img src="telaMain.png" width="500px" height="250px"></img>
+    <img src="IMG_9643.jpg" width="500px" height="250px"></img>
 </div>
 
 ## 📘 Descrição
