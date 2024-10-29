@@ -1,0 +1,9 @@
+# Ignorar arquivos de imagem
+*.jpeg
+*.png
+*.txt
+
+audio_pid.txt
+recordes.txt
+UML.jpeg
+telaMain.png
