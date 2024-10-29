@@ -7,7 +7,6 @@
 #include <iostream>
 #include <vector>
 #include <random>
-#include <unistd.h>
 #include <chrono>
 #include <fstream>
 #include <sys/types.h>
@@ -568,7 +567,7 @@ void TextMenu(Mat& frame) {
 
     // Definir tamanhos para os textos
     Size textSizeGame = getTextSize("PRESS START ENTER", font, fontScale, thickness, nullptr);
-    Size textSizeRecords = getTextSize("RECORDS", font, fontScale, thickness, nullptr);
+    Size textSizeRecords = getTextSize("RECORDS - R", font, fontScale, thickness, nullptr);
     Size textSizeSair = getTextSize("BACK - ESC", font, fontScale, thickness, nullptr);
 
     // Aumentar a margem das caixas
@@ -593,7 +592,7 @@ void TextMenu(Mat& frame) {
     // Desenhar os textos
     putText(frame, "PRESS START ENTER", Point(xGame + (fixedWidth - textSizeGame.width) / 2, yGame),
             font, fontScale, textColor, thickness, lineType);
-    putText(frame, "RECORDS", Point(xRecords + (fixedWidth - textSizeRecords.width) / 2, yRecords),
+    putText(frame, "RECORDS - R", Point(xRecords + (fixedWidth - textSizeRecords.width) / 2, yRecords),
             font, fontScale, textColor, thickness, lineType);
     putText(frame, "BACK - ESC", Point(xSair + (fixedWidth - textSizeSair.width) / 2, ySair),
             font, fontScale, textColor, thickness, lineType);
